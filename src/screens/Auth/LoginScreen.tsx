@@ -1,180 +1,106 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-  Alert,
-} from 'react-native';
-import { useForm, Controller } from 'react-hook-form';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
-import { spacing } from '../../theme/spacing';
-import { InputField } from '../../components/InputField';
-import { PrimaryButton } from '../../components/PrimaryButton';
-import { validateEmail, validateRequired } from '../../utils/validation';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { colors } from "../../theme/colors";
+import { typography } from "../../theme/typography";
+import { shadows } from "../../theme/shadows";
+import InputField from "../../components/InputField";
+import PrimaryButton from "../../components/PrimaryButton";
 
-interface LoginFormData {
-  email: string;
-  password: string;
-}
-
-interface LoginScreenProps {
-  navigation: any;
-}
-
-export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
-  const [loading, setLoading] = useState(false);
-  const fadeAnim = new Animated.Value(0);
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>();
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
-  const onSubmit = async (data: LoginFormData) => {
-    setLoading(true);
-    
-    // Mock login delay
-    setTimeout(async () => {
-      try {
-        // Mock successful login
-        await AsyncStorage.setItem('userToken', 'mock-jwt-token');
-        Alert.alert('Success', 'Login Successful!');
-        navigation.navigate('Dashboard');
-      } catch (error) {
-        Alert.alert('Error', 'Login failed. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    }, 2000);
-  };
-
+export default function LoginScreen() {
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <View style={styles.header}>
-        <Text style={styles.logo}>NEXUS</Text>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to your account</Text>
+    <View style={styles.container}>
+      <View style={styles.logoContainer}>
+        <View style={styles.neumorphicCircle}>
+          <Image 
+            source={require('../../images/logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+        </View>
       </View>
+
+      <Text style={styles.organizationName}>NEXUS</Text>
+      <Text style={styles.title}>Welcome Back!</Text>
+      <Text style={styles.subtitle}>Log in to manage attendance easily</Text>
 
       <View style={styles.form}>
-        <Controller
-          control={control}
-          name="email"
-          rules={{
-            required: 'Email is required',
-            validate: (value) => validateEmail(value) || 'Invalid email format',
-          }}
-          render={({ field: { onChange, value } }) => (
-            <InputField
-              placeholder="Email"
-              value={value}
-              onChangeText={onChange}
-              keyboardType="email-address"
-              error={errors.email?.message}
-            />
-          )}
-        />
+        <InputField label="Email" placeholder="Enter your email" />
+        <InputField label="Password" placeholder="Enter your password" secureTextEntry />
 
-        <Controller
-          control={control}
-          name="password"
-          rules={{
-            required: 'Password is required',
-            validate: (value) => validateRequired(value) || 'Password cannot be empty',
-          }}
-          render={({ field: { onChange, value } }) => (
-            <InputField
-              placeholder="Password"
-              value={value}
-              onChangeText={onChange}
-              secureTextEntry
-              error={errors.password?.message}
-            />
-          )}
-        />
+        <PrimaryButton label="Login" onPress={() => {}} />
 
-        <TouchableOpacity style={styles.forgotPassword}>
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+        <TouchableOpacity>
+          <Text style={styles.link}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <PrimaryButton
-          title="Login"
-          onPress={handleSubmit(onSubmit)}
-          loading={loading}
-        />
+        <View style={styles.signupContainer}>
+          <Text style={styles.textMuted}>Don't have an account? </Text>
+          <TouchableOpacity>
+            <Text style={styles.signupText}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      <View style={styles.footer}>
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.registerText}>
-            Don't have an account? <Text style={styles.registerLink}>Register</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingHorizontal: spacing.lg,
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: spacing.2xl,
+  logoContainer: {
+    marginBottom: 30,
+    alignItems: "center",
   },
-  logo: {
-    fontSize: typography.fontSize['4xl'],
-    fontWeight: typography.fontWeight.bold,
-    color: colors.primary,
-    marginBottom: spacing.lg,
+  neumorphicCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.surfaceLight,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadows.light,
+    ...shadows.dark,
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
   },
   title: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.bold,
-    color: colors.neutral[900],
-    marginBottom: spacing.sm,
+    ...typography.heading,
+    color: colors.textPrimary,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: typography.fontSize.base,
-    color: colors.neutral[500],
+    ...typography.subheading,
+    color: colors.textSecondary,
+    marginBottom: 32,
   },
   form: {
-    marginBottom: spacing.2xl,
+    width: "100%",
+    gap: 16,
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: spacing.lg,
-  },
-  forgotPasswordText: {
-    fontSize: typography.fontSize.sm,
+  link: {
+    textAlign: "right",
     color: colors.primary,
+    marginTop: 12,
+    fontSize: 14,
+    fontWeight: "500",
   },
-  footer: {
-    alignItems: 'center',
+  signupContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 20,
   },
-  registerText: {
-    fontSize: typography.fontSize.base,
-    color: colors.neutral[500],
+  textMuted: {
+    color: colors.textSecondary,
   },
-  registerLink: {
+  signupText: {
     color: colors.primary,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: "600",
   },
 });
