@@ -1,83 +1,41 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
-import { spacing, borderRadius } from '../theme/spacing';
-import { ErrorText } from './ErrorText';
+import React from "react";
+import { View, Text, TextInput, StyleSheet } from "react-native";
+import { colors } from "../theme/colors";
+import { shadows } from "../theme/shadows";
 
-interface InputFieldProps {
-  placeholder: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  secureTextEntry?: boolean;
-  keyboardType?: 'default' | 'email-address';
-  error?: string;
-}
-
-export const InputField: React.FC<InputFieldProps> = ({
-  placeholder,
-  value,
-  onChangeText,
-  secureTextEntry = false,
-  keyboardType = 'default',
-  error,
-}) => {
-  const [showPassword, setShowPassword] = useState(false);
-
+export default function InputField({ label, placeholder, secureTextEntry }: any) {
   return (
     <View style={styles.container}>
-      <View style={[styles.inputContainer, error && styles.inputError]}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.neumorphicInput}>
         <TextInput
           style={styles.input}
           placeholder={placeholder}
-          value={value}
-          onChangeText={onChangeText}
-          secureTextEntry={secureTextEntry && !showPassword}
-          keyboardType={keyboardType}
-          placeholderTextColor={colors.neutral[400]}
+          placeholderTextColor={colors.placeholder}
+          secureTextEntry={secureTextEntry}
         />
-        {secureTextEntry && (
-          <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
-            style={styles.eyeIcon}
-          >
-            <Ionicons
-              name={showPassword ? 'eye-off' : 'eye'}
-              size={20}
-              color={colors.neutral[400]}
-            />
-          </TouchableOpacity>
-        )}
       </View>
-      <ErrorText message={error} />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.md,
+  container: { width: "100%" },
+  label: {
+    fontSize: 14,
+    color: colors.textPrimary,
+    marginBottom: 6,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.neutral[200],
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.background,
-  },
-  inputError: {
-    borderColor: colors.error,
+  neumorphicInput: {
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    ...shadows.light,
+    ...shadows.dark,
   },
   input: {
-    flex: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: typography.fontSize.base,
-    color: colors.neutral[900],
-  },
-  eyeIcon: {
-    paddingHorizontal: spacing.md,
+    color: colors.textPrimary,
+    fontSize: 14,
   },
 });
