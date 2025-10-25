@@ -7,17 +7,59 @@ import {
   StyleSheet,
   ScrollView,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 
 export default function SignUpScreen({ navigation }: any) {
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [organizationName, setOrganizationName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  const validatePassword = (pwd: string) => {
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasLower = /[a-z]/.test(pwd);
+    const hasNumber = /\d/.test(pwd);
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
+    const isLongEnough = pwd.length >= 8;
+    return hasUpper && hasLower && hasNumber && hasSymbol && isLongEnough;
+  };
+
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+    
+    if (!firstName.trim()) newErrors.firstName = "First name is required";
+    if (!lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!organizationName.trim()) newErrors.organizationName = "Organization name is required";
+    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) newErrors.email = "Valid email is required";
+    if (!validatePassword(password)) newErrors.password = "Password must be 8+ chars with uppercase, lowercase, number & symbol";
+    if (password !== confirmPassword) newErrors.confirmPassword = "Passwords don't match";
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSignUp = () => {
+    if (validateForm()) {
+      // Proceed with sign up
+      console.log("Form is valid");
+    }
+  };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.keyboardContainer} 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <Image 
@@ -34,13 +76,25 @@ export default function SignUpScreen({ navigation }: any) {
       <View style={styles.form}>
         <View style={styles.neuBox}>
           <TextInput
-            placeholder="Full Name"
+            placeholder="First Name"
             placeholderTextColor="#8E8E93"
             style={styles.input}
-            value={fullName}
-            onChangeText={setFullName}
+            value={firstName}
+            onChangeText={setFirstName}
           />
         </View>
+        {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
+
+        <View style={styles.neuBox}>
+          <TextInput
+            placeholder="Last Name"
+            placeholderTextColor="#8E8E93"
+            style={styles.input}
+            value={lastName}
+            onChangeText={setLastName}
+          />
+        </View>
+        {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
 
         <View style={styles.neuBox}>
           <TextInput
@@ -51,6 +105,7 @@ export default function SignUpScreen({ navigation }: any) {
             onChangeText={setOrganizationName}
           />
         </View>
+        {errors.organizationName && <Text style={styles.errorText}>{errors.organizationName}</Text>}
 
         <View style={styles.neuBox}>
           <TextInput
@@ -59,12 +114,15 @@ export default function SignUpScreen({ navigation }: any) {
             style={styles.input}
             value={email}
             onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
         </View>
+        {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
         <View style={styles.neuBox}>
           <TextInput
-            placeholder="Password"
+            placeholder="Password (8+ chars, A-z, 0-9, symbol)"
             placeholderTextColor="#8E8E93"
             style={styles.input}
             secureTextEntry
@@ -72,6 +130,7 @@ export default function SignUpScreen({ navigation }: any) {
             onChangeText={setPassword}
           />
         </View>
+        {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
         <View style={styles.neuBox}>
           <TextInput
@@ -83,8 +142,9 @@ export default function SignUpScreen({ navigation }: any) {
             onChangeText={setConfirmPassword}
           />
         </View>
+        {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
 
-        <TouchableOpacity style={[styles.neuButton]} onPress={() => {}}>
+        <TouchableOpacity style={[styles.neuButton]} onPress={handleSignUp}>
           <Text style={styles.buttonText}>Create Account</Text>
         </TouchableOpacity>
 
@@ -98,17 +158,23 @@ export default function SignUpScreen({ navigation }: any) {
           </Text>
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardContainer: {
+    flex: 1,
+    backgroundColor: "#F2F2F5",
+  },
   container: {
     flexGrow: 1,
     backgroundColor: "#F2F2F5",
     padding: 24,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 800,
   },
   header: { alignItems: "center", marginBottom: 40 },
   logoContainer: {
@@ -178,4 +244,11 @@ const styles = StyleSheet.create({
   buttonText: { color: "#1C1C1E", fontSize: 16, fontWeight: "600" },
   footerText: { marginTop: 20, color: "#4A4A4A", fontSize: 13 },
   link: { color: "#1C1C1E", fontWeight: "500" },
+  errorText: {
+    color: "#FF3B30",
+    fontSize: 12,
+    marginTop: -12,
+    marginBottom: 8,
+    paddingLeft: 16,
+  },
 });
