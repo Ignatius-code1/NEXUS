@@ -1,7 +1,7 @@
-# Import Flask to create our application
 from flask import Flask
+from supabase import create_client
+from flask_jwt_extended import JWTManager
 
-# This function creates and configures the Flask app
 def create_app(config_file='config.py'):
     # Create the Flask application instance
     app = Flask(__name__)
@@ -9,10 +9,17 @@ def create_app(config_file='config.py'):
     # Load configuration from file
     app.config.from_pyfile(config_file)
     
-    # Future: Add your routes or blueprints here
-    # Example:
-    # from .routes import main_routes
-    # app.register_blueprint(main_routes)
+    # Initialize Supabase client
+    app.supabase = create_client(
+        app.config['SUPABASE_URL'],
+        app.config['SUPABASE_KEY']
+    )
     
-    return app  
-
+    # Setup JWT
+    jwt = JWTManager(app)
+    
+    # Import and register blueprints
+    from .routes import auth_routes
+    app.register_blueprint(auth_routes)
+    
+    return app
