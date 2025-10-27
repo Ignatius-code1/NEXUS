@@ -1,36 +1,50 @@
 from app.db import db
-from sqlalchemy_serializer import SerializerMixin
 from datetime import datetime
 
+class Attendee(db.Model):
+    __tablename__ = 'attendees'
 
-class User(db.Model, SerializerMixin):
-    __tablename__ = 'users'
-
-    #  Primary Key
     id = db.Column(db.Integer, primary_key=True)
-
-    #  Basic Info
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    role = db.Column(db.String(20), nullable=False)  # 'student' or 'teacher'
-
-    #  Authentication
+    registration_number = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-
-    #  Device relationship (for teachers)
-    devices = db.relationship('Device', back_populates='teacher', lazy=True)
-
-    #  Sessions (for teachers)
-    sessions = db.relationship('Session', back_populates='teacher', lazy=True)
-
-    #  Attendance logs (for students)
-    attendance_records = db.relationship('Attendance', back_populates='student', lazy=True)
-
-    #  Timestamp
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    #  Serializer config
-    serialize_rules = ('-password_hash', '-devices.teacher', '-sessions.teacher', '-attendance_records.student')
+    # Relationships
+    attendance_records = db.relationship("Attendance", back_populates="attendee", lazy=True)
 
     def __repr__(self):
-        return f"<User {self.name} ({self.role})>"
+        return f"<Attendee {self.name}>"
+
+
+class Attendant(db.Model):
+    __tablename__ = 'attendants'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    employee_id = db.Column(db.String(50), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    sessions = db.relationship("Session", back_populates="attendant", lazy=True)
+    devices = db.relationship("Device", back_populates="attendant", lazy=True)
+
+    def __repr__(self):
+        return f"<Attendant {self.name}>"
+
+
+class Admin(db.Model):
+    __tablename__ = 'admins'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), default="admin")  # Optional
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Admin {self.name}>"

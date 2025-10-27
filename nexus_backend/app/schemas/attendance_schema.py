@@ -9,11 +9,11 @@ class AttendanceSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         include_fk = True
 
-    # Nested relationships — link to attendant & session info
-    attendant = fields.Nested("AttendantSchema", only=("id", "name", "email"))
-    session = fields.Nested("SessionSchema", only=("id", "topic", "start_time", "end_time"))
+    # Nested relationships — show basic info
+    attendee = fields.Nested("UserSchema", only=("id", "full_name", "email"), dump_only=True)
+    attendant = fields.Nested("UserSchema", only=("id", "full_name", "email"), dump_only=True)
+    session = fields.Nested("SessionSchema", only=("id", "topic", "start_time", "end_time"), dump_only=True)
 
 
-# Single and multiple instances for easy use
 attendance_schema = AttendanceSchema()
 attendances_schema = AttendanceSchema(many=True)
