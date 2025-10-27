@@ -44,7 +44,8 @@ export default function AdminUploadPage({ navigation }: any) {
       }
 
       // Read file content directly
-      const fileContent = await FileSystem.readAsStringAsync(file.uri);
+      const fileUri = result.assets ? result.assets[0].uri : (result as any).uri;
+      const fileContent = await FileSystem.readAsStringAsync(fileUri);
       console.log('File content length:', fileContent.length);
 
       console.log('File content preview:', fileContent.substring(0, 200));
