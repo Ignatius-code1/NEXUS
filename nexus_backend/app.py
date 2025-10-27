@@ -1,6 +1,6 @@
 from flask import Flask
 from .app.models.student_model import db
-from .app.auth import app as auth_app
+from app import app as auth_app
 
 
 app = Flask(__name__)
