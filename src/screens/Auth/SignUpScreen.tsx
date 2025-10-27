@@ -45,8 +45,7 @@ export default function SignUpScreen({ navigation }: any) {
 
   const handleSignUp = () => {
     if (validateForm()) {
-      // Proceed with sign up
-      console.log("Form is valid");
+      navigation.navigate("AdminUpload");
     }
   };
 
