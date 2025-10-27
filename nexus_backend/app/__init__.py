@@ -14,5 +14,5 @@ def create_app(config_file='config.py'):
     # from .routes import main_routes
     # app.register_blueprint(main_routes)
     
-    return app  # Return the configured app
+    return app  
 
