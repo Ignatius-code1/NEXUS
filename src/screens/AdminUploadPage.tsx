@@ -10,11 +10,17 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
+
+type RootStackParamList = {
+  AdminDashboard: undefined;
+};
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import Papa from "papaparse";
 
-export default function AdminUploadPage({ navigation }: any) {
+export default function AdminUploadPage() {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [csvData, setCsvData] = useState([]);
 
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -116,7 +122,10 @@ export default function AdminUploadPage({ navigation }: any) {
     <View style={styles.proceedContainer}>
       <TouchableOpacity
         style={styles.proceedBtn}
-        onPress={() => navigation.navigate("Dashboard")}
+        onPress={() => {
+          console.log('Navigating to AdminDashboard...');
+          navigation.navigate("AdminDashboard");
+        }}
       >
         <Text style={styles.proceedText}>Proceed to Dashboard</Text>
       </TouchableOpacity>
