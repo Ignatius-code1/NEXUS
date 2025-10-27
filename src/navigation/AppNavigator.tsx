@@ -6,6 +6,8 @@ import LandingScreenIntro from '../screens/Auth/LandingScreenIntro';
 import LandingScreen from '../screens/Auth/LandingScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
 import SignUpScreen from '../screens/Auth/SignUpScreen';
+import AdminUploadPage from '../screens/AdminUploadPage';
+import AttendeeDashboard from '../screens/AttendeeDashboard';
 import DashboardScreen from '../screens/DashboardScreen';
 
 const Stack = createNativeStackNavigator();
@@ -18,6 +20,8 @@ export default function AppNavigator() {
       <Stack.Screen name="Landing" component={LandingScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="SignUp" component={SignUpScreen} />
+      <Stack.Screen name="AdminUpload" component={AdminUploadPage} />
+      <Stack.Screen name="AttendeeDashboard" component={AttendeeDashboard} />
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
     </Stack.Navigator>
   );
