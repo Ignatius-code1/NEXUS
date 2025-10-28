@@ -22,7 +22,7 @@ def create_app():
     jwt.init_app(app)
     
     # Import models (needed for migrations)
-    from app.models import user_model, password_reset, session_model, attendance
+    from app.models import admin_model, attendant_model, attendee_model, password_reset, session_model, attendance
     
     # Register blueprints
     from app.routes.auth_routes import auth_bp

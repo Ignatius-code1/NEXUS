@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Simple script to run the Flask application
-"""
 from app import create_app, db
 
 app = create_app()
@@ -9,27 +6,31 @@ app = create_app()
 @app.cli.command()
 def init_db():
     """Initialize the database."""
-    db.create_all()
-    print('Database initialized!')
+    with app.app_context():
+        db.create_all()
+        print('Database initialized!')
 
 @app.cli.command()
 def create_admin():
     """Create admin user."""
-    from app.models.user_model import User
-    
-    admin = User(
-        name='Admin User',
-        email='admin@nexus.com',
-        role='Admin'
-    )
-    admin.set_password('admin123')
-    
-    db.session.add(admin)
-    db.session.commit()
-    admin.generate_serial()
-    db.session.commit()
-    
-    print(f'Admin user created: {admin.email}')
+    with app.app_context():
+        from app.models.admin_model import Admin
+        
+        # Check if admin already exists
+        if Admin.query.filter_by(email='admin@nexus.com').first():
+            print('Admin already exists!')
+            return
+        
+        admin = Admin(
+            name='Admin User',
+            email='admin@nexus.com'
+        )
+        admin.set_password('admin123')
+        
+        db.session.add(admin)
+        db.session.commit()
+        
+        print(f'Admin user created: {admin.email} / admin123')
 
 if __name__ == '__main__':
     with app.app_context():
