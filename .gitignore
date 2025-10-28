@@ -16,3 +16,35 @@ web-build/
 .env
 *.env
 .env.*
+.vscode/
+
+# Backend documentation/guide files (personal notes)
+nexus_backend/COMPLETE_SETUP_GUIDE.md
+nexus_backend/FINAL_STRUCTURE.md
+nexus_backend/INSTALL.md
+nexus_backend/SEPARATE_TABLES_GUIDE.md
+nexus_backend/SIMPLE_EMAIL_GUIDE.md
+nexus_backend/SIMPLE_SETUP_GUIDE.md
+nexus_backend/SUPABASE_TABLES_GUIDE.md
+nexus_backend/TESTING.md
+nexus_backend/VERIFICATION.md
+
+# Sample CSV files
+nexus_backend/sample_*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
