@@ -3,6 +3,8 @@ from app import db
 from app.models.user_model import User
 from app.models.session_model import Session
 from app.utils.auth import admin_required
+from app.utils.email import send_welcome_email
+import secrets
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -31,13 +33,16 @@ def create_user(current_user_id):
         if User.query.filter_by(email=data['email']).first():
             return jsonify({'error': 'Email already exists'}), 400
         
+        # Generate random password
+        temp_password = secrets.token_urlsafe(8)  # Simple 8-character password
+        
         # Create user
         user = User(
             name=data['name'],
             email=data['email'],
             role=data['role']
         )
-        user.set_password('password123')  # Default password
+        user.set_password(temp_password)
         
         db.session.add(user)
         db.session.commit()
@@ -45,6 +50,9 @@ def create_user(current_user_id):
         # Generate serial
         user.generate_serial()
         db.session.commit()
+        
+        # Send welcome email with login details
+        send_welcome_email(user.email, user.name, temp_password)
         
         return jsonify(user.to_dict()), 201
         
