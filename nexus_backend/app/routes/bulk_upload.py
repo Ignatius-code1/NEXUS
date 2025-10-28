@@ -3,16 +3,16 @@ from app import db
 from app.models.user_model import User
 from app.utils.auth import admin_required
 from app.utils.email import send_welcome_email
-import pandas as pd
-import secrets
+import csv
 import io
+import secrets
 
 bulk_bp = Blueprint('bulk', __name__)
 
 @bulk_bp.route('/upload-users', methods=['POST'])
 @admin_required
 def bulk_upload_users(current_user_id):
-    """Upload CSV/Excel file to create multiple users automatically"""
+    """Upload CSV file to create multiple users automatically"""
     try:
         # Check if file was uploaded
         if 'file' not in request.files:
@@ -22,36 +22,26 @@ def bulk_upload_users(current_user_id):
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
         
-        # Read file based on extension
-        filename = file.filename.lower()
+        # Only accept CSV files
+        if not file.filename.lower().endswith('.csv'):
+            return jsonify({'error': 'Only CSV files allowed'}), 400
         
-        if filename.endswith('.csv'):
-            # Read CSV file
-            df = pd.read_csv(io.StringIO(file.read().decode('utf-8')))
-        elif filename.endswith(('.xlsx', '.xls')):
-            # Read Excel file
-            df = pd.read_excel(file)
-        else:
-            return jsonify({'error': 'Only CSV and Excel files allowed'}), 400
-        
-        # Validate required columns
-        required_columns = ['name', 'email']
-        missing_columns = [col for col in required_columns if col not in df.columns]
-        if missing_columns:
-            return jsonify({'error': f'Missing columns: {missing_columns}'}), 400
+        # Read CSV file
+        file_content = file.read().decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(file_content))
         
         # Process each row
         created_users = []
         failed_users = []
         
-        for index, row in df.iterrows():
+        for row in csv_reader:
             try:
-                name = str(row['name']).strip()
-                email = str(row['email']).strip().lower()
-                role = str(row.get('role', 'Attendee')).strip()
+                name = row.get('name', '').strip()
+                email = row.get('email', '').strip().lower()
+                role = row.get('role', 'Attendee').strip()
                 
                 # Skip empty rows
-                if not name or not email or email == 'nan':
+                if not name or not email:
                     continue
                 
                 # Check if user already exists
@@ -109,28 +99,20 @@ def bulk_upload_users(current_user_id):
 @bulk_bp.route('/download-template', methods=['GET'])
 @admin_required
 def download_template(current_user_id):
-    """Download CSV template for bulk upload"""
+    """Get CSV template for bulk upload"""
     try:
-        # Create sample CSV template
-        template_data = {
-            'name': ['John Doe', 'Jane Smith', 'Bob Johnson'],
-            'email': ['john@school.edu', 'jane@school.edu', 'bob@school.edu'],
-            'role': ['Attendee', 'Attendant', 'Attendee']
-        }
-        
-        df = pd.DataFrame(template_data)
-        
-        # Convert to CSV
-        output = io.StringIO()
-        df.to_csv(output, index=False)
-        csv_content = output.getvalue()
+        # Simple CSV template
+        template = """name,email,role
+John Doe,john@school.edu,Attendee
+Jane Smith,jane@school.edu,Attendant
+Bob Johnson,bob@school.edu,Attendee"""
         
         return jsonify({
-            'template': csv_content,
+            'template': template,
             'instructions': [
                 'Required columns: name, email',
                 'Optional column: role (Admin/Attendant/Attendee, defaults to Attendee)',
-                'Save as CSV or Excel file',
+                'Save as CSV file',
                 'Upload via POST /api/bulk/upload-users'
             ]
         }), 200
