@@ -41,3 +41,5 @@ CREATE TABLE IF NOT EXISTS public.attendance (
 );
 -- Optional: index for frequent lookups
 CREATE INDEX IF NOT EXISTS idx_attendance_attendee ON public.attendance(attendee_id);
+
+
