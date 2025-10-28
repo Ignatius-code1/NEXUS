@@ -22,24 +22,20 @@ CREATE TABLE IF NOT EXISTS public.devices (
 -- Sessions (optional: when an attendant starts a session)
 CREATE TABLE IF NOT EXISTS public.sessions (
     id bigserial PRIMARY KEY,
-    attendant_id bigint REFERENCES public.users(id) ON DELETE
-    SET NULL,
-        ble_id text,
-        started_at timestamptz DEFAULT now(),
-        ended_at timestamptz
+    attendant_id bigint REFERENCES public.users(id) ON DELETE SET NULL,
+    ble_id text,
+    started_at timestamptz DEFAULT now(),
+    ended_at timestamptz
 );
 -- Attendance
 CREATE TABLE IF NOT EXISTS public.attendance (
     id bigserial PRIMARY KEY,
     device_id text,
     attendee_id bigint REFERENCES public.users(id) ON DELETE CASCADE,
-    session_id bigint REFERENCES public.sessions(id) ON DELETE
-    SET NULL,
-        timestamp timestamptz DEFAULT now(),
-        status text DEFAULT 'Present',
-        rssi_strength double precision
+    session_id bigint REFERENCES public.sessions(id) ON DELETE SET NULL,
+    timestamp timestamptz DEFAULT now(),
+    status text DEFAULT 'Present',
+    rssi_strength double precision
 );
--- Optional: index for frequent lookups
+
 CREATE INDEX IF NOT EXISTS idx_attendance_attendee ON public.attendance(attendee_id);
-
-
