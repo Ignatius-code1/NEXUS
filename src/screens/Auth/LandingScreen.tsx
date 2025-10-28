@@ -22,7 +22,7 @@ export default function LandingScreen() {
       </View>
 
       {/* Tagline Section */}
-      <Text style={styles.title}>Student Attendance Management System</Text>
+      <Text style={styles.title}>Attendance Management System</Text>
       <Text style={styles.subtitle}>
         Seamless, Smart, and Secure Attendance Tracking
       </Text>
