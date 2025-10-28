@@ -1,17 +1,9 @@
 from typing import List, Dict, Optional
 from datetime import datetime
 
-
 from app.models import db, Attendance, ClassSession, attendee
-
-
-
-
-class ReportServiceError(Exception):
-pass
-
-
-
+#class ReportServiceError(Exception):
+#pass
 
 class ReportService:
 @staticmethod

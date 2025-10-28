@@ -1,6 +1,4 @@
 from typing import Literal
-
-
 from app.utils.device_fingerprint import parse_and_validate
 from app.services.device_service import DeviceService
 
