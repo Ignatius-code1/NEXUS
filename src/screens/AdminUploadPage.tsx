@@ -9,8 +9,10 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
+import { adminApi } from "../services/adminApi";
 
 type RootStackParamList = {
   AdminDashboard: undefined;
@@ -22,8 +24,8 @@ import Papa from "papaparse";
 export default function AdminUploadPage() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [csvData, setCsvData] = useState([]);
-
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // ✅ FIXED: safer upload
   const handleFileUpload = async () => {
@@ -87,7 +89,7 @@ export default function AdminUploadPage() {
       console.log('Valid rows:', validRows);
       setCsvData(validRows);
       setIsDataLoaded(true);
-      Alert.alert("Success", `Loaded ${validRows.length} records successfully.`);
+      Alert.alert("Success", `Loaded ${validRows.length} records successfully. Click 'Save to Database' to add them.`);
     } catch (error) {
       console.error("CSV Upload Error:", error);
       Alert.alert("Error", "Failed to upload or parse CSV file.");
@@ -114,9 +116,64 @@ export default function AdminUploadPage() {
         </TouchableOpacity>
       </View>
       
-      {isDataLoaded && <Text style={styles.sectionTitle}>Added Records</Text>}
+      {isDataLoaded && (
+        <>
+          <Text style={styles.sectionTitle}>Loaded Records</Text>
+          <TouchableOpacity 
+            style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]} 
+            onPress={handleSaveToDatabase}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text style={styles.saveText}>💾 Save to Database</Text>
+            )}
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
+
+  const handleSaveToDatabase = async () => {
+    if (csvData.length === 0) {
+      Alert.alert("Error", "No data to save");
+      return;
+    }
+
+    setIsSaving(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      for (const user of csvData) {
+        try {
+          await adminApi.createUser({
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          });
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to save user ${user.name}:`, error);
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        Alert.alert(
+          "Success", 
+          `${successCount} users saved successfully.${errorCount > 0 ? ` ${errorCount} failed.` : ''}`
+        );
+      } else {
+        Alert.alert("Error", "Failed to save users to database");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to save users to database");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const renderFooter = () => (
     <View style={styles.proceedContainer}>
@@ -270,6 +327,26 @@ const styles = StyleSheet.create({
   },
   proceedText: {
     color: "#FFF",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  saveBtn: {
+    backgroundColor: "#34D399",
+    paddingVertical: 14,
+    paddingHorizontal: 35,
+    borderRadius: 18,
+    marginTop: 10,
+    shadowColor: "#34D399",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 7,
+    elevation: 5,
+  },
+  saveBtnDisabled: {
+    opacity: 0.6,
+  },
+  saveText: {
+    color: "#fff",
     fontWeight: "700",
     fontSize: 16,
   },
