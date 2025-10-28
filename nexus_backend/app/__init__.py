@@ -29,10 +29,12 @@ def create_app():
     from app.routes.admin_routes import admin_bp
     from app.routes.attendant_routes import attendant_bp
     from app.routes.attendee_routes import attendee_bp
+    from app.routes.bulk_upload import bulk_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(attendant_bp, url_prefix='/api/attendant')
     app.register_blueprint(attendee_bp, url_prefix='/api/attendee')
+    app.register_blueprint(bulk_bp, url_prefix='/api/bulk')
     
     return app
