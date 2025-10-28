@@ -1,18 +1,33 @@
-# Import Flask to create our application
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_jwt_extended import JWTManager
+from app.config import Config
 
-# This function creates and configures the Flask app
-def create_app(config_file='config.py'):
-    # Create the Flask application instance
+# Initialize extensions
+db = SQLAlchemy()
+migrate = Migrate()
+jwt = JWTManager()
+
+def create_app():
+    # Create Flask application
     app = Flask(__name__)
     
-    # Load configuration from file
-    app.config.from_pyfile(config_file)
+    # Load configuration
+    app.config.from_object(Config)
     
-    # Future: Add your routes or blueprints here
-    # Example:
-    # from .routes import main_routes
-    # app.register_blueprint(main_routes)
+    # Initialize extensions with app
+    db.init_app(app)
+    migrate.init_app(app, db)
+    jwt.init_app(app)
     
-    return app  # Return the configured app
-
+    # Import models (needed for migrations)
+    from app.models import user_model, password_reset, session_model
+    
+    # Register blueprints
+    from app.routes.auth_routes import auth_bp
+    from app.routes.admin_routes import admin_bp
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    
+    return app
