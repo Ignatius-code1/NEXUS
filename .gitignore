@@ -47,4 +47,20 @@ instance/
 *.db
 *.sqlite
 *.sqlite3
+nexus_backend/migrations/versions/*.py
+!nexus_backend/migrations/versions/__init__.py
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
 
