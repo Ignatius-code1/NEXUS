@@ -7,4 +7,3 @@ Werkzeug==2.3.7
 python-dotenv==1.0.0
 supabase==1.0.4
 psycopg2-binary==2.9.7
-SQLAlchemy-serializer==1.4.1
