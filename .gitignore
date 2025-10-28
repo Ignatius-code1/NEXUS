@@ -18,7 +18,8 @@ web-build/
 .env.*
 .vscode/
 
-# Backend documentation/guide files (personal notes)
+# Documentation/guide files (personal notes)
+docs/
 nexus_backend/COMPLETE_SETUP_GUIDE.md
 nexus_backend/FINAL_STRUCTURE.md
 nexus_backend/INSTALL.md
