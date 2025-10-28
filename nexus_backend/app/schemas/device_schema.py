@@ -3,7 +3,7 @@ from marshmallow import Schema, fields, validate
 class DeviceSchema(Schema):
     
     # Schema for validating and serializing device data.
-    # Used when a teacher/attendant registers their Bluetooth device.
+    # Used when an attendant registers their Bluetooth device.
     
     id = fields.Int(dump_only=True)
     user_id = fields.Int(required=True, description="Owner of the device (attendant ID)")

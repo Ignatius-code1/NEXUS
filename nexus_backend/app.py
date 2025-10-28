@@ -1,12 +1,8 @@
 from flask import Flask
 from .app.models.student_model import db
-from app import app as auth_app
+from .app import create_app
 
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///students.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+app = create_app()
 db.init_app(app)
 
 # Register blueprints

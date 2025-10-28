@@ -1,36 +1,20 @@
-from app.db import db
-from sqlalchemy_serializer import SerializerMixin
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
+db = SQLAlchemy()
 
-class User(db.Model, SerializerMixin):
+class User(db.Model):
     __tablename__ = 'users'
 
-    #  Primary Key
     id = db.Column(db.Integer, primary_key=True)
-
-    #  Basic Info
-    name = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100))
     email = db.Column(db.String(120), unique=True, nullable=False)
-    role = db.Column(db.String(20), nullable=False)  # 'student' or 'teacher'
-
-    #  Authentication
-    password_hash = db.Column(db.String(255), nullable=False)
-
-    #  Device relationship (for teachers)
-    devices = db.relationship('Device', back_populates='teacher', lazy=True)
-
-    #  Sessions (for teachers)
-    sessions = db.relationship('Session', back_populates='teacher', lazy=True)
-
-    #  Attendance logs (for students)
-    attendance_records = db.relationship('Attendance', back_populates='student', lazy=True)
-
-    #  Timestamp
+    password = db.Column(db.String(100), nullable=False)
+    role = db.Column(db.String(20))  # 'attendee' or 'attendant'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     #  Serializer config
-    serialize_rules = ('-password_hash', '-devices.teacher', '-sessions.teacher', '-attendance_records.student')
+    serialize_rules = ('-password_hash', '-devices.attendant', '-sessions.attendant', '-attendance_records.attendee')
 
     def __repr__(self):
         return f"<User {self.name} ({self.role})>"
