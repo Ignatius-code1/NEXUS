@@ -78,4 +78,6 @@ Thumbs.db
 *.log
 logs/
 
-frontend/
+# Frontend and database folders
+front-end/
+nexus_backend/db/
