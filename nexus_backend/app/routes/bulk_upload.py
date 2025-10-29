@@ -10,261 +10,197 @@ import secrets
 
 bulk_bp = Blueprint('bulk', __name__)
 
+# Helper function to create user from CSV row
+def create_user_from_row(row, user_type):
+    """Create a single user (Attendee or Attendant) from CSV row"""
+    name = row.get('name', '').strip()
+    email = row.get('email', '').strip().lower()
+
+    # Skip if missing data
+    if not name or not email:
+        return None
+
+    # Check if email exists
+    if user_type == 'Attendee':
+        if Attendee.query.filter_by(email=email).first():
+            raise Exception('Email already exists')
+        user = Attendee(name=name, email=email)
+    else:  # Attendant
+        if Attendant.query.filter_by(email=email).first():
+            raise Exception('Email already exists')
+        user = Attendant(name=name, email=email)
+
+    # Set password and save
+    temp_password = secrets.token_urlsafe(8)
+    user.set_password(temp_password)
+    db.session.add(user)
+    db.session.flush()
+    user.generate_serial()
+
+    # Send email
+    send_welcome_email(user.email, user.name, temp_password)
+
+    return {
+        'name': user.name,
+        'email': user.email,
+        'role': user_type,
+        'serial': user.serial,
+        'password': temp_password
+    }
+
 @bulk_bp.route('/upload-attendees', methods=['POST'])
 @admin_required
 def bulk_upload_attendees(current_user_id):
     """Upload CSV file to create multiple attendees"""
     try:
+        # Check file exists
         if 'file' not in request.files:
             return jsonify({'error': 'No file uploaded'}), 400
-        
+
         file = request.files['file']
         if not file.filename.lower().endswith('.csv'):
             return jsonify({'error': 'Only CSV files allowed'}), 400
-        
-        # Read CSV file
-        file_content = file.read().decode('utf-8')
-        csv_reader = csv.DictReader(io.StringIO(file_content))
-        
-        created_users = []
-        failed_users = []
-        
+
+        # Read CSV
+        content = file.read().decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(content))
+
+        created = []
+        failed = []
+
+        # Process each row
         for row in csv_reader:
             try:
-                name = row.get('name', '').strip()
-                email = row.get('email', '').strip().lower()
-                
-                if not name or not email:
-                    continue
-                
-                # Check if email already exists
-                if Attendee.query.filter_by(email=email).first():
-                    failed_users.append({'email': email, 'reason': 'Email already exists'})
-                    continue
-                
-                # Generate random password
-                temp_password = secrets.token_urlsafe(8)
-                
-                # Create attendee
-                attendee = Attendee(name=name, email=email)
-                attendee.set_password(temp_password)
-                
-                db.session.add(attendee)
-                db.session.flush()  # Get ID
-                
-                # Generate serial
-                attendee.generate_serial()
-                
-                # Send welcome email
-                email_sent = send_welcome_email(attendee.email, attendee.name, temp_password)
-                
-                created_users.append({
-                    'name': attendee.name,
-                    'email': attendee.email,
-                    'role': 'Attendee',
-                    'serial': attendee.serial,
-                    'password': temp_password,
-                    'email_sent': email_sent
-                })
-                
+                result = create_user_from_row(row, 'Attendee')
+                if result:
+                    created.append(result)
             except Exception as e:
-                failed_users.append({'email': email, 'reason': str(e)})
-        
+                failed.append({'email': row.get('email', ''), 'reason': str(e)})
+
         db.session.commit()
-        
         return jsonify({
-            'message': f'Attendees upload completed',
-            'created_count': len(created_users),
-            'failed_count': len(failed_users),
-            'created_users': created_users,
-            'failed_users': failed_users
+            'message': 'Upload completed',
+            'created_count': len(created),
+            'failed_count': len(failed),
+            'created_users': created,
+            'failed_users': failed
         }), 200
-        
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': f'Upload failed: {str(e)}'}), 500
+        return jsonify({'error': str(e)}), 500
 
 @bulk_bp.route('/upload-attendants', methods=['POST'])
 @admin_required
 def bulk_upload_attendants(current_user_id):
     """Upload CSV file to create multiple attendants"""
     try:
+        # Check file exists
         if 'file' not in request.files:
             return jsonify({'error': 'No file uploaded'}), 400
-        
+
         file = request.files['file']
         if not file.filename.lower().endswith('.csv'):
             return jsonify({'error': 'Only CSV files allowed'}), 400
-        
-        # Read CSV file
-        file_content = file.read().decode('utf-8')
-        csv_reader = csv.DictReader(io.StringIO(file_content))
-        
-        created_users = []
-        failed_users = []
-        
+
+        # Read CSV
+        content = file.read().decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(content))
+
+        created = []
+        failed = []
+
+        # Process each row
         for row in csv_reader:
             try:
-                name = row.get('name', '').strip()
-                email = row.get('email', '').strip().lower()
-                
-                if not name or not email:
-                    continue
-                
-                # Check if email already exists
-                if Attendant.query.filter_by(email=email).first():
-                    failed_users.append({'email': email, 'reason': 'Email already exists'})
-                    continue
-                
-                # Generate random password
-                temp_password = secrets.token_urlsafe(8)
-                
-                # Create attendant
-                attendant = Attendant(name=name, email=email)
-                attendant.set_password(temp_password)
-                
-                db.session.add(attendant)
-                db.session.flush()  # Get ID
-                
-                # Generate serial
-                attendant.generate_serial()
-                
-                # Send welcome email
-                email_sent = send_welcome_email(attendant.email, attendant.name, temp_password)
-                
-                created_users.append({
-                    'name': attendant.name,
-                    'email': attendant.email,
-                    'role': 'Attendant',
-                    'serial': attendant.serial,
-                    'password': temp_password,
-                    'email_sent': email_sent
-                })
-                
+                result = create_user_from_row(row, 'Attendant')
+                if result:
+                    created.append(result)
             except Exception as e:
-                failed_users.append({'email': email, 'reason': str(e)})
-        
+                failed.append({'email': row.get('email', ''), 'reason': str(e)})
+
         db.session.commit()
-        
         return jsonify({
-            'message': f'Attendants upload completed',
-            'created_count': len(created_users),
-            'failed_count': len(failed_users),
-            'created_users': created_users,
-            'failed_users': failed_users
+            'message': 'Upload completed',
+            'created_count': len(created),
+            'failed_count': len(failed),
+            'created_users': created,
+            'failed_users': failed
         }), 200
-        
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': f'Upload failed: {str(e)}'}), 500
+        return jsonify({'error': str(e)}), 500
 
 @bulk_bp.route('/upload-mixed', methods=['POST'])
 @admin_required
 def bulk_upload_mixed(current_user_id):
     """Upload CSV file with both attendees and attendants (role column required)"""
     try:
+        # Check file exists
         if 'file' not in request.files:
             return jsonify({'error': 'No file uploaded'}), 400
-        
+
         file = request.files['file']
         if not file.filename.lower().endswith('.csv'):
             return jsonify({'error': 'Only CSV files allowed'}), 400
-        
-        # Read CSV file
-        file_content = file.read().decode('utf-8')
-        csv_reader = csv.DictReader(io.StringIO(file_content))
-        
-        created_attendees = []
-        created_attendants = []
-        failed_users = []
-        
+
+        # Read CSV
+        content = file.read().decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(content))
+
+        attendees = []
+        attendants = []
+        failed = []
+
+        # Process each row
         for row in csv_reader:
             try:
-                name = row.get('name', '').strip()
-                email = row.get('email', '').strip().lower()
                 role = row.get('role', 'Attendee').strip()
-                
-                if not name or not email:
-                    continue
-                
-                # Generate random password
-                temp_password = secrets.token_urlsafe(8)
-                
+
+                # Determine user type
                 if role.lower() == 'attendant':
-                    # Check if email exists
-                    if Attendant.query.filter_by(email=email).first():
-                        failed_users.append({'email': email, 'reason': 'Email already exists'})
-                        continue
-                    
-                    # Create attendant
-                    user = Attendant(name=name, email=email)
-                    user.set_password(temp_password)
-                    db.session.add(user)
-                    db.session.flush()
-                    user.generate_serial()
-                    
-                    created_attendants.append({
-                        'name': user.name,
-                        'email': user.email,
-                        'role': 'Attendant',
-                        'serial': user.serial,
-                        'password': temp_password
-                    })
+                    user_type = 'Attendant'
                 else:
-                    # Default to attendee
-                    if Attendee.query.filter_by(email=email).first():
-                        failed_users.append({'email': email, 'reason': 'Email already exists'})
-                        continue
-                    
-                    # Create attendee
-                    user = Attendee(name=name, email=email)
-                    user.set_password(temp_password)
-                    db.session.add(user)
-                    db.session.flush()
-                    user.generate_serial()
-                    
-                    created_attendees.append({
-                        'name': user.name,
-                        'email': user.email,
-                        'role': 'Attendee',
-                        'serial': user.serial,
-                        'password': temp_password
-                    })
-                
-                # Send welcome email
-                send_welcome_email(user.email, user.name, temp_password)
-                
+                    user_type = 'Attendee'
+
+                # Create user
+                result = create_user_from_row(row, user_type)
+                if result:
+                    if user_type == 'Attendant':
+                        attendants.append(result)
+                    else:
+                        attendees.append(result)
+
             except Exception as e:
-                failed_users.append({'email': email, 'reason': str(e)})
-        
+                failed.append({'email': row.get('email', ''), 'reason': str(e)})
+
         db.session.commit()
-        
         return jsonify({
-            'message': 'Mixed upload completed',
-            'attendees_created': len(created_attendees),
-            'attendants_created': len(created_attendants),
-            'failed_count': len(failed_users),
-            'created_attendees': created_attendees,
-            'created_attendants': created_attendants,
-            'failed_users': failed_users
+            'message': 'Upload completed',
+            'attendees_created': len(attendees),
+            'attendants_created': len(attendants),
+            'failed_count': len(failed),
+            'created_attendees': attendees,
+            'created_attendants': attendants,
+            'failed_users': failed
         }), 200
-        
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': f'Upload failed: {str(e)}'}), 500
+        return jsonify({'error': str(e)}), 500
 
 @bulk_bp.route('/login-activity', methods=['GET'])
 @admin_required
 def get_login_activity(current_user_id):
     """Get login activity for all users"""
     try:
-        # Get all users with their last login times
-        attendees = Attendee.query.all()
-        attendants = Attendant.query.all()
-        
+        # Get all users
+        all_users = Attendee.query.all() + Attendant.query.all()
+
+        # Build activity list
         activity = []
-        
-        for user in attendees + attendants:
+        for user in all_users:
             activity.append({
                 'name': user.name,
                 'email': user.email,
@@ -273,14 +209,11 @@ def get_login_activity(current_user_id):
                 'last_login': user.last_login.isoformat() if user.last_login else 'Never',
                 'created_at': user.created_at.isoformat() if user.created_at else None
             })
-        
+
         # Sort by last login (most recent first)
         activity.sort(key=lambda x: x['last_login'] if x['last_login'] != 'Never' else '1900-01-01', reverse=True)
-        
-        return jsonify({
-            'total_users': len(activity),
-            'login_activity': activity
-        }), 200
-        
+
+        return jsonify({'total_users': len(activity), 'login_activity': activity}), 200
+
     except Exception as e:
-        return jsonify({'error': f'Failed to get activity: {str(e)}'}), 500
+        return jsonify({'error': str(e)}), 500

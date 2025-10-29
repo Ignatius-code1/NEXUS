@@ -1,4 +1,3 @@
-"""Models package - Database models for NEXUS"""
 
 from app.models.admin_model import Admin
 from app.models.attendant_model import Attendant

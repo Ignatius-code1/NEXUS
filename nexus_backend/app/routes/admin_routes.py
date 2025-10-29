@@ -10,6 +10,18 @@ import secrets
 
 admin_bp = Blueprint('admin', __name__)
 
+# Helper function to get user by role
+def get_user_by_role(role, user_id):
+    """Get user from correct table based on role"""
+    if role == 'Admin':
+        return Admin.query.get_or_404(user_id)
+    elif role == 'Attendant':
+        return Attendant.query.get_or_404(user_id)
+    elif role == 'Attendee':
+        return Attendee.query.get_or_404(user_id)
+    else:
+        return None
+
 # User Management
 @admin_bp.route('/users', methods=['GET'])
 @admin_required
@@ -21,9 +33,8 @@ def get_users(current_user_id):
         attendants = [user.to_dict() for user in Attendant.query.all()]
         attendees = [user.to_dict() for user in Attendee.query.all()]
 
-        # Combine all users
-        all_users = admins + attendants + attendees
-        return jsonify(all_users), 200
+        # Combine and return
+        return jsonify(admins + attendants + attendees), 200
     except Exception as e:
         return jsonify({'error': 'Failed to fetch users'}), 500
 
@@ -34,20 +45,18 @@ def create_user(current_user_id):
     try:
         data = request.get_json()
 
+        # Validate input
         if not data or not data.get('name') or not data.get('email') or not data.get('role'):
             return jsonify({'error': 'Name, email and role required'}), 400
 
         role = data['role']
         email = data['email']
 
-        # Check if user exists in any table
+        # Check if email exists
         if (Admin.query.filter_by(email=email).first() or
             Attendant.query.filter_by(email=email).first() or
             Attendee.query.filter_by(email=email).first()):
             return jsonify({'error': 'Email already exists'}), 400
-
-        # Generate random password
-        temp_password = secrets.token_urlsafe(8)
 
         # Create user based on role
         if role == 'Admin':
@@ -59,8 +68,9 @@ def create_user(current_user_id):
         else:
             return jsonify({'error': 'Invalid role'}), 400
 
+        # Set password and save
+        temp_password = secrets.token_urlsafe(8)
         user.set_password(temp_password)
-
         db.session.add(user)
         db.session.commit()
 
@@ -68,7 +78,7 @@ def create_user(current_user_id):
         user.generate_serial()
         db.session.commit()
 
-        # Send welcome email with login details
+        # Send email
         send_welcome_email(user.email, user.name, temp_password)
 
         return jsonify(user.to_dict()), 201
@@ -82,18 +92,13 @@ def create_user(current_user_id):
 def update_user(current_user_id, role, user_id):
     """Update user (requires role in URL: /users/Admin/1 or /users/Attendant/2)"""
     try:
-        # Find user based on role
-        if role == 'Admin':
-            user = Admin.query.get_or_404(user_id)
-        elif role == 'Attendant':
-            user = Attendant.query.get_or_404(user_id)
-        elif role == 'Attendee':
-            user = Attendee.query.get_or_404(user_id)
-        else:
+        # Get user
+        user = get_user_by_role(role, user_id)
+        if not user:
             return jsonify({'error': 'Invalid role'}), 400
 
+        # Update fields
         data = request.get_json()
-
         if data.get('name'):
             user.name = data['name']
         if data.get('email'):
@@ -111,14 +116,9 @@ def update_user(current_user_id, role, user_id):
 def delete_user(current_user_id, role, user_id):
     """Delete user (requires role in URL: /users/Admin/1 or /users/Attendant/2)"""
     try:
-        # Find user based on role
-        if role == 'Admin':
-            user = Admin.query.get_or_404(user_id)
-        elif role == 'Attendant':
-            user = Attendant.query.get_or_404(user_id)
-        elif role == 'Attendee':
-            user = Attendee.query.get_or_404(user_id)
-        else:
+        # Get user
+        user = get_user_by_role(role, user_id)
+        if not user:
             return jsonify({'error': 'Invalid role'}), 400
 
         db.session.delete(user)
