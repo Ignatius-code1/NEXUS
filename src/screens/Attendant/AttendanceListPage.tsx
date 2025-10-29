@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import PrimaryButton from "../../components/PrimaryButton";
+import SearchBar from "../../components/SearchBar";
 import { colors } from "../../theme/colors";
 import { shadows } from "../../theme/shadows";
 
-type User = { id: string; name: string; serial: string; role: "attendee" | "attendant"; present?: boolean };
+type User = { id: string; name: string; serial: string; role: "attendee" | "attendant"; present?: boolean; email?: string };
 type Session = { id: string; title: string; courseCode?: string; date?: string };
 
 export default function AttendanceListPage({ route }: any) {
@@ -13,14 +14,15 @@ export default function AttendanceListPage({ route }: any) {
   const [session, setSession] = useState<Session | null>(null);
   const [students, setStudents] = useState<User[]>([]);
   const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     setTimeout(() => {
       setSession({ id: "s1", title: "Computer Science 101", courseCode: "CS101", date: "2025-10-29" });
       setStudents([
-        { id: "u1", name: "Alice Johnson", serial: "001", role: "attendee", present: true },
-        { id: "u2", name: "Bob Smith", serial: "002", role: "attendant", present: false },
-        { id: "u3", name: "Charlie Brown", serial: "003", role: "attendee", present: false },
+        { id: "u1", name: "Alice Johnson", serial: "001", role: "attendee", present: true, email: "alice@example.com" },
+        { id: "u2", name: "Bob Smith", serial: "002", role: "attendant", present: false, email: "bob@example.com" },
+        { id: "u3", name: "Charlie Brown", serial: "003", role: "attendee", present: false, email: "charlie@example.com" },
       ]);
       setLoading(false);
     }, 600);
@@ -29,6 +31,12 @@ export default function AttendanceListPage({ route }: any) {
   const toggle = (id: string) => {
     setStudents((prev) => prev.map(s => s.id === id ? { ...s, present: !s.present } : s));
   };
+
+  const filteredStudents = students.filter(s =>
+    s.name.toLowerCase().includes(query.toLowerCase()) ||
+    s.serial.toLowerCase().includes(query.toLowerCase()) ||
+    (s.email && s.email.toLowerCase().includes(query.toLowerCase()))
+  );
 
   const handleSave = async () => {
     setSaving(true);
@@ -45,21 +53,28 @@ export default function AttendanceListPage({ route }: any) {
       <Text style={styles.heading}>Attendance — {session?.title}</Text>
       <Text style={styles.sub}>Date: {session?.date} • Code: {session?.courseCode}</Text>
 
-      <ScrollView style={{ marginTop: 12 }}>
-        {students.map((s) => (
-          <View key={s.id} style={styles.card}>
-            <View style={styles.row}>
-              <View>
-                <Text style={styles.name}>{s.name}</Text>
-                <Text style={styles.serial}>#{s.serial} • {s.role}</Text>
-              </View>
+      <SearchBar query={query} onChange={setQuery} />
 
-              <TouchableOpacity style={[styles.toggle, s.present ? styles.present : styles.absent]} onPress={() => toggle(s.id)}>
-                <Ionicons name={s.present ? "checkmark" : "close"} size={20} color={s.present ? "#065F46" : "#991B1B"} />
-              </TouchableOpacity>
+      <ScrollView style={{ marginTop: 12 }}>
+        {filteredStudents.length === 0 ? (
+          <Text style={styles.empty}>No attendees found.</Text>
+        ) : (
+          filteredStudents.map((s) => (
+            <View key={s.id} style={styles.card}>
+              <View style={styles.row}>
+                <View>
+                  <Text style={styles.name}>{s.name}</Text>
+                  <Text style={styles.serial}>#{s.serial} • {s.role}</Text>
+                  {s.email && <Text style={styles.email}>{s.email}</Text>}
+                </View>
+
+                <TouchableOpacity style={[styles.toggle, s.present ? styles.present : styles.absent]} onPress={() => toggle(s.id)}>
+                  <Ionicons name={s.present ? "checkmark" : "close"} size={20} color={s.present ? "#065F46" : "#991B1B"} />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        ))}
+          ))
+        )}
       </ScrollView>
 
       <PrimaryButton label={saving ? "Saving..." : "Save Attendance"} onPress={handleSave} />
@@ -78,4 +93,6 @@ const styles = StyleSheet.create({
   toggle: { padding: 10, borderRadius: 10, minWidth: 56, alignItems: "center", justifyContent: "center" },
   present: { backgroundColor: "#D1FAE5" },
   absent: { backgroundColor: "#FEE2E2" },
+  email: { color: colors.textSecondary, marginTop: 2, fontSize: 12 },
+  empty: { textAlign: "center", color: colors.textSecondary, marginTop: 20 },
 });
