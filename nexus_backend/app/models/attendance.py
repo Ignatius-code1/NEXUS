@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 class Attendance(db.Model):
     __tablename__ = 'attendance'
@@ -8,7 +8,7 @@ class Attendance(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     session_id = db.Column(db.Integer, db.ForeignKey('sessions.id'), nullable=False)
     status = db.Column(db.String(20), default='Present')  # Present, Absent, Late
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     
     # Relationships
     user = db.relationship("User", backref="attendance_records")
