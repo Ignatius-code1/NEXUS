@@ -29,18 +29,7 @@ tsconfig.json
 
 # Documentation/guide files (personal notes)
 docs/
-CONFLICT_RESOLUTION_SUMMARY.md
-TEAMMATE_RESPONSE.md
-*.session.sql
-nexus_backend/COMPLETE_SETUP_GUIDE.md
-nexus_backend/FINAL_STRUCTURE.md
-nexus_backend/INSTALL.md
-nexus_backend/SEPARATE_TABLES_GUIDE.md
-nexus_backend/SIMPLE_EMAIL_GUIDE.md
-nexus_backend/SIMPLE_SETUP_GUIDE.md
-nexus_backend/SUPABASE_TABLES_GUIDE.md
-nexus_backend/TESTING.md
-nexus_backend/VERIFICATION.md
+
 
 # Sample CSV files
 nexus_backend/sample_*.csv
