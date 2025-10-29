@@ -11,6 +11,8 @@ import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import AdminNavigator from './AdminNavigator';
 import DashboardScreen from '../screens/DashboardScreen';
 
+
+
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
@@ -25,6 +27,8 @@ export default function AppNavigator() {
       <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
       <Stack.Screen name="AdminNav" component={AdminNavigator} options={{ headerShown: false }} />
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
+      
+
     </Stack.Navigator>
   );
 }

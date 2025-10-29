@@ -1,16 +1,26 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { colors,} from "../theme/colors";
 
 export default function DashboardScreen() {
+  const navigation: any = useNavigation();
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to NEXUS Dashboard</Text>
 
-      <TouchableOpacity style={styles.neuButton}>
+      <TouchableOpacity
+        style={styles.neuButton}
+        onPress={() => navigation.navigate("MarkAttendance")}
+      >
         <Text style={styles.buttonText}>Mark Attendance</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.neuButton}>
+      <TouchableOpacity
+        style={styles.neuButton}
+        onPress={() => navigation.navigate("AttendanceRecords")}
+      >
         <Text style={styles.buttonText}>View Attendance Records</Text>
       </TouchableOpacity>
     </View>
@@ -20,7 +30,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F5",
+    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
@@ -28,12 +38,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1C1C1E",
+    color: colors.textPrimary,
     marginBottom: 30,
   },
   neuButton: {
     width: "100%",
-    backgroundColor: "#F5F5F7",
+    backgroundColor: colors.surfaceLight,
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: "center",
@@ -44,5 +54,9 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
   },
-  buttonText: { fontSize: 16, fontWeight: "600", color: "#1C1C1E" },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.textPrimary,
+  },
 });
