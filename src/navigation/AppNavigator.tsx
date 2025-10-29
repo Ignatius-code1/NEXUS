@@ -10,6 +10,10 @@ import AdminUploadPage from '../screens/AdminUploadPage';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import AdminNavigator from './AdminNavigator';
 import DashboardScreen from '../screens/DashboardScreen';
+import AttendantPage from '../screens/Attendant/AttendantPage';
+import SessionsPage from '../screens/Attendant/SessionsPage';
+import AttendanceListPage from '../screens/Attendant/AttendanceListPage';
+import ReportsPage from '../screens/Attendant/ReportsPage';
 
 
 
@@ -27,6 +31,10 @@ export default function AppNavigator() {
       <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
       <Stack.Screen name="AdminNav" component={AdminNavigator} options={{ headerShown: false }} />
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
+      <Stack.Screen name="Attendant" component={AttendantPage} />
+      <Stack.Screen name="AttendantSessions" component={SessionsPage} />
+      <Stack.Screen name="AttendanceList" component={AttendanceListPage} />
+      <Stack.Screen name="AttendantReports" component={ReportsPage} />
       
 
     </Stack.Navigator>

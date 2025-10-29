@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Nexus Attendance",
+    "slug": "nexus-attendance",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "nexusapp",
+    "splash": {
+      "backgroundColor": "#F5F6FA"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F5F6FA"
+      }
+    }
+  }
+}
