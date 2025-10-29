@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models.user_model import User
+from app.models.attendant_model import Attendant
 from app.models.session_model import Session
 from app.models.attendance import Attendance
 from app.utils.auth import auth_required
@@ -23,10 +23,10 @@ def create_session(current_user_id):
     """Create new session (Attendant only)"""
     try:
         # Verify user is attendant
-        user = User.query.get(current_user_id)
-        if user.role != 'Attendant':
+        attendant = Attendant.query.get(current_user_id)
+        if not attendant:
             return jsonify({'error': 'Only attendants can create sessions'}), 403
-            
+
         data = request.get_json()
         
         if not data or not data.get('title'):
@@ -34,7 +34,7 @@ def create_session(current_user_id):
         
         session = Session(
             title=data['title'],
-            attendant_name=user.name,
+            attendant_name=attendant.name,
             schedule=data.get('schedule', ''),
             course_code=data.get('courseCode', ''),
             attendant_id=current_user_id,
@@ -65,22 +65,22 @@ def mark_attendance(current_user_id, session_id):
             
         data = request.get_json()
         attendance_data = data.get('attendance', [])
-        
+
         for record in attendance_data:
-            user_id = record.get('user_id')
+            attendee_id = record.get('attendee_id')
             status = record.get('status', 'Present')
-            
+
             # Check if attendance already exists
             existing = Attendance.query.filter_by(
-                user_id=user_id, 
+                attendee_id=attendee_id,
                 session_id=session_id
             ).first()
-            
+
             if existing:
                 existing.status = status
             else:
                 attendance = Attendance(
-                    user_id=user_id,
+                    attendee_id=attendee_id,
                     session_id=session_id,
                     status=status
                 )

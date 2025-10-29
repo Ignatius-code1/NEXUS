@@ -1,77 +1,156 @@
-# NEXUS Backend
+# 🎓 NEXUS Backend - Student Attendance Management System
 
-Simple Flask backend with JWT authentication, SQLAlchemy, and Supabase support.
+Flask REST API with JWT authentication, PostgreSQL/Supabase, and role-based access control.
 
-## Setup
+## ✨ Features
 
-1. **Install dependencies:**
+- 🔐 JWT Authentication
+- 👥 Role-based Access (Admin, Attendant, Attendee)
+- 📊 Attendance Tracking
+- 🗄️ PostgreSQL/Supabase Database
+- 📧 Email Notifications
+- 📁 Bulk User Upload (CSV)
+- 🔄 Database Migrations
+
+---
+
+## 🚀 Quick Start
+
+### 1. **Install Dependencies:**
+
 ```bash
 pip install -r requirements.txt
 ```
 
-2. **Set up environment variables:**
+### 2. **Set Up Environment:**
+
+Create `.env` file in the root directory (see `.env` in parent folder)
+
+### 3. **Initialize Database:**
+
 ```bash
-cp .env.example .env
-# Edit .env with your actual values
+flask db upgrade
 ```
 
-3. **Initialize database:**
+### 4. **Create Admin User:**
+
 ```bash
-python run.py init-db
+flask create-admin
 ```
 
-4. **Create admin user:**
+**Default credentials:** `admin@nexus.com` / `admin123`
+
+### 5. **Run Server:**
+
 ```bash
-python run.py create-admin
+python app.py
 ```
 
-5. **Run the application:**
-```bash
-python run.py
-```
+**Server runs on:** `http://127.0.0.1:5000`
 
-## API Endpoints
+---
 
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
+## 📖 Full Commands Reference
 
-### Login Request:
-```json
-{
-  "email": "admin@nexus.com",
-  "password": "admin123"
-}
-```
+See **[COMMANDS.md](COMMANDS.md)** for complete list of commands!
 
-### Login Response:
-```json
-{
-  "user": {
-    "id": 1,
-    "name": "Admin User",
-    "email": "admin@nexus.com",
-    "role": "Admin",
-    "serial": "ADM-1"
-  },
-  "token": "jwt-token-here"
-}
-```
+## 📡 API Endpoints
 
-## Project Structure
+### 🔐 Authentication
+
+- `POST /login` - Universal login
+- `POST /register` - User registration
+- `POST /forgot-password` - Request password reset
+- `POST /reset-password` - Reset password
+
+### 👤 Admin Routes
+
+- `GET /users` - Get all users
+- `POST /users` - Create user
+- `PUT /users/<role>/<id>` - Update user
+- `DELETE /users/<role>/<id>` - Delete user
+- `GET /analytics` - System analytics
+- `POST /bulk-upload` - Upload CSV
+
+### 👨‍🏫 Attendant Routes
+
+- `POST /sessions` - Create session
+- `GET /sessions` - Get sessions
+- `POST /sessions/<id>/attendance` - Mark attendance
+
+### 👨‍🎓 Attendee Routes
+
+- `GET /attendance` - My attendance
+- `GET /profile` - My profile
+
+---
+
+## 📂 Project Structure
 
 ```
 nexus_backend/
 ├── app/
-│   ├── __init__.py          # Flask app initialization
-│   ├── config.py            # Configuration settings
+│   ├── __init__.py              # Flask app initialization
+│   ├── config.py                # Configuration
 │   ├── models/
-│   │   └── user_model.py    # User database model
+│   │   ├── __init__.py
+│   │   ├── admin_model.py       # Admin model
+│   │   ├── attendant_model.py   # Attendant (teacher) model
+│   │   ├── attendee_model.py    # Attendee (student) model
+│   │   ├── session_model.py     # Session model
+│   │   ├── attendance.py        # Attendance model
+│   │   └── password_reset.py    # Password reset model
 │   ├── routes/
-│   │   └── auth_routes.py   # Authentication endpoints
+│   │   ├── __init__.py
+│   │   ├── auth_routes.py       # Authentication
+│   │   ├── admin_routes.py      # Admin endpoints
+│   │   ├── attendant_routes.py  # Attendant endpoints
+│   │   ├── attendee_routes.py   # Attendee endpoints
+│   │   └── bulk_upload.py       # CSV upload
 │   └── utils/
-│       └── auth.py          # JWT utilities and decorators
-├── app.py                   # Main application entry
-├── run.py                   # Run script with CLI commands
-└── requirements.txt         # Python dependencies
+│       ├── __init__.py
+│       ├── auth.py              # JWT utilities
+│       └── email.py             # Email utilities
+├── migrations/                  # Database migrations
+├── instance/                    # SQLite database (if used)
+├── app.py                       # Main entry point
+├── requirements.txt             # Dependencies
+├── COMMANDS.md                  # Command reference
+└── README.md                    # This file
 ```
+
+---
+
+## 🗄️ Database
+
+**Tables:**
+
+- `admins` - Admin users
+- `attendants` - Teachers/Instructors
+- `attendees` - Students
+- `sessions` - Attendance sessions
+- `attendance` - Attendance records
+- `password_resets` - Password reset tokens
+
+**Supported Databases:**
+
+- ✅ PostgreSQL (Production - Supabase)
+- ✅ SQLite (Development)
+
+---
+
+## 🔑 User Roles
+
+| Role          | Description          | Permissions                      |
+| ------------- | -------------------- | -------------------------------- |
+| **Admin**     | System administrator | Full access                      |
+| **Attendant** | Teacher/Instructor   | Create sessions, mark attendance |
+| **Attendee**  | Student              | View own attendance              |
+
+---
+
+## 📧 Contact
+
+For questions or issues, contact your team lead.
+
+**Happy Coding! 🚀**

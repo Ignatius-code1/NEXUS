@@ -14,10 +14,10 @@ class Session(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     # Foreign key to attendant/creator
-    attendant_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    attendant_id = db.Column(db.Integer, db.ForeignKey("attendants.id"), nullable=False)
 
     # Relationships
-    attendant = db.relationship("User", back_populates="sessions")
+    attendant = db.relationship("Attendant", back_populates="sessions")
 
     def to_dict(self):
         """Convert session to dictionary"""

@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models.user_model import User
+from app.models.admin_model import Admin
+from app.models.attendant_model import Attendant
+from app.models.attendee_model import Attendee
 from app.models.session_model import Session
 from app.utils.auth import admin_required
 from app.utils.email import send_welcome_email
@@ -12,87 +14,117 @@ admin_bp = Blueprint('admin', __name__)
 @admin_bp.route('/users', methods=['GET'])
 @admin_required
 def get_users(current_user_id):
-    """Get all users"""
+    """Get all users (admins, attendants, attendees)"""
     try:
-        users = User.query.all()
-        return jsonify([user.to_dict() for user in users]), 200
+        # Get all users from all three tables
+        admins = [user.to_dict() for user in Admin.query.all()]
+        attendants = [user.to_dict() for user in Attendant.query.all()]
+        attendees = [user.to_dict() for user in Attendee.query.all()]
+
+        # Combine all users
+        all_users = admins + attendants + attendees
+        return jsonify(all_users), 200
     except Exception as e:
         return jsonify({'error': 'Failed to fetch users'}), 500
 
 @admin_bp.route('/users', methods=['POST'])
 @admin_required
 def create_user(current_user_id):
-    """Create new user"""
+    """Create new user (admin, attendant, or attendee)"""
     try:
         data = request.get_json()
-        
+
         if not data or not data.get('name') or not data.get('email') or not data.get('role'):
             return jsonify({'error': 'Name, email and role required'}), 400
-        
-        # Check if user exists
-        if User.query.filter_by(email=data['email']).first():
+
+        role = data['role']
+        email = data['email']
+
+        # Check if user exists in any table
+        if (Admin.query.filter_by(email=email).first() or
+            Attendant.query.filter_by(email=email).first() or
+            Attendee.query.filter_by(email=email).first()):
             return jsonify({'error': 'Email already exists'}), 400
-        
+
         # Generate random password
-        temp_password = secrets.token_urlsafe(8)  # Simple 8-character password
-        
-        # Create user
-        user = User(
-            name=data['name'],
-            email=data['email'],
-            role=data['role']
-        )
+        temp_password = secrets.token_urlsafe(8)
+
+        # Create user based on role
+        if role == 'Admin':
+            user = Admin(name=data['name'], email=email)
+        elif role == 'Attendant':
+            user = Attendant(name=data['name'], email=email)
+        elif role == 'Attendee':
+            user = Attendee(name=data['name'], email=email)
+        else:
+            return jsonify({'error': 'Invalid role'}), 400
+
         user.set_password(temp_password)
-        
+
         db.session.add(user)
         db.session.commit()
-        
+
         # Generate serial
         user.generate_serial()
         db.session.commit()
-        
+
         # Send welcome email with login details
         send_welcome_email(user.email, user.name, temp_password)
-        
+
         return jsonify(user.to_dict()), 201
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to create user'}), 500
 
-@admin_bp.route('/users/<int:user_id>', methods=['PUT'])
+@admin_bp.route('/users/<string:role>/<int:user_id>', methods=['PUT'])
 @admin_required
-def update_user(current_user_id, user_id):
-    """Update user"""
+def update_user(current_user_id, role, user_id):
+    """Update user (requires role in URL: /users/Admin/1 or /users/Attendant/2)"""
     try:
-        user = User.query.get_or_404(user_id)
+        # Find user based on role
+        if role == 'Admin':
+            user = Admin.query.get_or_404(user_id)
+        elif role == 'Attendant':
+            user = Attendant.query.get_or_404(user_id)
+        elif role == 'Attendee':
+            user = Attendee.query.get_or_404(user_id)
+        else:
+            return jsonify({'error': 'Invalid role'}), 400
+
         data = request.get_json()
-        
+
         if data.get('name'):
             user.name = data['name']
         if data.get('email'):
             user.email = data['email']
-        if data.get('role'):
-            user.role = data['role']
-            user.generate_serial()  # Regenerate serial if role changes
-        
+
         db.session.commit()
         return jsonify(user.to_dict()), 200
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to update user'}), 500
 
-@admin_bp.route('/users/<int:user_id>', methods=['DELETE'])
+@admin_bp.route('/users/<string:role>/<int:user_id>', methods=['DELETE'])
 @admin_required
-def delete_user(current_user_id, user_id):
-    """Delete user"""
+def delete_user(current_user_id, role, user_id):
+    """Delete user (requires role in URL: /users/Admin/1 or /users/Attendant/2)"""
     try:
-        user = User.query.get_or_404(user_id)
+        # Find user based on role
+        if role == 'Admin':
+            user = Admin.query.get_or_404(user_id)
+        elif role == 'Attendant':
+            user = Attendant.query.get_or_404(user_id)
+        elif role == 'Attendee':
+            user = Attendee.query.get_or_404(user_id)
+        else:
+            return jsonify({'error': 'Invalid role'}), 400
+
         db.session.delete(user)
         db.session.commit()
         return jsonify({'message': 'User deleted successfully'}), 200
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to delete user'}), 500
@@ -147,21 +179,22 @@ def create_session(current_user_id):
 def get_analytics(current_user_id):
     """Get system analytics"""
     try:
-        total_users = User.query.count()
-        attendees = User.query.filter_by(role='Attendee').count()
-        attendants = User.query.filter_by(role='Attendant').count()
-        admins = User.query.filter_by(role='Admin').count()
+        # Count users from each table
+        admins_count = Admin.query.count()
+        attendants_count = Attendant.query.count()
+        attendees_count = Attendee.query.count()
+        total_users = admins_count + attendants_count + attendees_count
         active_sessions = Session.query.filter_by(is_active=True).count()
-        
+
         return jsonify({
             'totalUsers': total_users,
             'activeUnits': active_sessions,
             'avgAttendance': 85,  # Mock data
             'activeSessions': active_sessions,
             'userDistribution': {
-                'attendees': attendees,
-                'attendants': attendants,
-                'admins': admins
+                'attendees': attendees_count,
+                'attendants': attendants_count,
+                'admins': admins_count
             },
             'recentActivity': [
                 'New user registered',
@@ -169,6 +202,6 @@ def get_analytics(current_user_id):
                 'User updated'
             ]
         }), 200
-        
+
     except Exception as e:
         return jsonify({'error': 'Failed to fetch analytics'}), 500

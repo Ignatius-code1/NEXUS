@@ -43,13 +43,19 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         try:
             current_user_id = get_jwt_identity()
-            from app.models.user_model import User
-            user = User.query.get(current_user_id)
-            
-            if not user or user.role != 'Admin':
+            from app.models.admin_model import Admin
+
+            # Extract ID from token (format: "admin_1")
+            if isinstance(current_user_id, str) and current_user_id.startswith('admin_'):
+                admin_id = int(current_user_id.split('_')[1])
+                admin = Admin.query.get(admin_id)
+
+                if not admin:
+                    return jsonify({'error': 'Admin access required'}), 403
+
+                return f(admin_id, *args, **kwargs)
+            else:
                 return jsonify({'error': 'Admin access required'}), 403
-                
-            return f(current_user_id, *args, **kwargs)
         except Exception as e:
             return jsonify({'error': 'Access denied'}), 403
     return decorated_function

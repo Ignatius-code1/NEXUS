@@ -12,9 +12,6 @@ class Config:
     SUPABASE_URL = os.getenv('SUPABASE_URL', 'your-supabase-url')
     SUPABASE_KEY = os.getenv('SUPABASE_KEY', 'your-supabase-key')
 
-    # Database Configuration
-    # Priority: DATABASE_URL > Individual parameters > SQLite default
-
     # Check if DATABASE_URL is provided
     database_url = os.getenv('DATABASE_URL')
 
