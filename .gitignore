@@ -46,6 +46,7 @@ ENV/
 .pytest_cache/
 instance/
 *.db
+
 *.sqlite
 *.sqlite3
 nexus_backend/migrations/versions/*.py

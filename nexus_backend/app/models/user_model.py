@@ -1,6 +1,6 @@
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timezone
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -11,10 +11,10 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='Attendee')  # Admin, Attendant, Attendee
     serial = db.Column(db.String(20), unique=True, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     
     # Relationships
-    sessions = db.relationship("Session", back_populates="teacher", lazy=True)
+    sessions = db.relationship("Session", back_populates="attendant", lazy=True)
     
     def set_password(self, password):
         """Hash and set password"""

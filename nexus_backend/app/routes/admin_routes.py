@@ -115,16 +115,16 @@ def create_session(current_user_id):
     try:
         data = request.get_json()
         
-        if not data or not data.get('title') or not data.get('instructor'):
-            return jsonify({'error': 'Title and instructor required'}), 400
-        
+        if not data or not data.get('title') or not data.get('attendantName'):
+            return jsonify({'error': 'Title and attendant name required'}), 400
+
         # Create session
         session = Session(
             title=data['title'],
-            instructor=data['instructor'],
+            attendant_name=data['attendantName'],
             schedule=data.get('schedule', ''),
             course_code=data.get('courseCode', ''),
-            teacher_id=current_user_id,
+            attendant_id=current_user_id,
             is_active=data.get('isActive', True)
         )
         

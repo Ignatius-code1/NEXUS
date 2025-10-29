@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import secrets
 
 class PasswordReset(db.Model):
@@ -10,7 +10,7 @@ class PasswordReset(db.Model):
     code = db.Column(db.String(6), nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False)
     used = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     
     @staticmethod
     def generate_code():
@@ -27,7 +27,7 @@ class PasswordReset(db.Model):
         reset = PasswordReset(
             email=email,
             code=PasswordReset.generate_code(),
-            expires_at=datetime.utcnow() + timedelta(minutes=15)  # 15 minutes expiry
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=15)  # 15 minutes expiry
         )
         
         db.session.add(reset)
@@ -36,7 +36,7 @@ class PasswordReset(db.Model):
     
     def is_valid(self):
         """Check if code is still valid"""
-        return not self.used and datetime.utcnow() < self.expires_at
+        return not self.used and datetime.now(timezone.utc) < self.expires_at
     
     def mark_used(self):
         """Mark code as used"""

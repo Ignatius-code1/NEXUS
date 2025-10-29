@@ -12,7 +12,7 @@ attendant_bp = Blueprint('attendant', __name__)
 def get_my_sessions(current_user_id):
     """Get sessions created by this attendant"""
     try:
-        sessions = Session.query.filter_by(teacher_id=current_user_id).all()
+        sessions = Session.query.filter_by(attendant_id=current_user_id).all()
         return jsonify([session.to_dict() for session in sessions]), 200
     except Exception as e:
         return jsonify({'error': 'Failed to fetch sessions'}), 500
@@ -34,10 +34,10 @@ def create_session(current_user_id):
         
         session = Session(
             title=data['title'],
-            instructor=user.name,
+            attendant_name=user.name,
             schedule=data.get('schedule', ''),
             course_code=data.get('courseCode', ''),
-            teacher_id=current_user_id,
+            attendant_id=current_user_id,
             is_active=True
         )
         
@@ -59,7 +59,7 @@ def mark_attendance(current_user_id, session_id):
     """Mark attendance for a session"""
     try:
         # Verify session belongs to this attendant
-        session = Session.query.filter_by(id=session_id, teacher_id=current_user_id).first()
+        session = Session.query.filter_by(id=session_id, attendant_id=current_user_id).first()
         if not session:
             return jsonify({'error': 'Session not found or access denied'}), 404
             
