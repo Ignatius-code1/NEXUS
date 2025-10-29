@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.models.device_model import Device
-from app.models.user_model import Attendant
+from app.models.attendant_model import Attendant
 from app.schemas.device_schema import DeviceSchema, DeviceRegisterSchema
 from app import db
 from datetime import datetime

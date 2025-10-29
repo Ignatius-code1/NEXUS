@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.models.session_model import Session
-from app.models.user_model import Attendant
+from app.models.attendant_model import Attendant
 from app import db
 from app.schemas.session_schema import session_schema, sessions_schema
 from datetime import datetime
