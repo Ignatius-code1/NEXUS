@@ -13,6 +13,10 @@ import AttendeeDashboardPage from '../screens/AttendeeDashboardPage';
 import MyUnitsPage from '../screens/Attendee/MyUnitsPage';
 import AttendanceHistoryPage from '../screens/Attendee/AttendanceHistoryPage';
 import MessagesPage from '../screens/Attendee/MessagesPage';
+import AttendantDashboardPage from '../screens/AttendantDashboardPage';
+import AttendantSessionsPage from '../screens/Attendant/AttendantSessionsPage';
+import AttendantAttendancePage from '../screens/Attendant/AttendantAttendancePage';
+import AttendantReportsPage from '../screens/Attendant/AttendantReportsPage';
 
 const Stack = createNativeStackNavigator();
 
@@ -70,6 +74,50 @@ export default function AppNavigator() {
           headerTintColor: "#fff",
           headerTitleStyle: { fontWeight: "700" },
           title: "Messages"
+        }}
+      />
+      <Stack.Screen
+        name="AttendantDashboard"
+        component={AttendantDashboardPage}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: "#A020F0" },
+          headerTintColor: "#fff",
+          headerTitleStyle: { fontWeight: "700" },
+          title: "Attendant Dashboard"
+        }}
+      />
+      <Stack.Screen
+        name="AttendantSessions"
+        component={AttendantSessionsPage}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: "#A020F0" },
+          headerTintColor: "#fff",
+          headerTitleStyle: { fontWeight: "700" },
+          title: "My Sessions"
+        }}
+      />
+      <Stack.Screen
+        name="AttendantAttendance"
+        component={AttendantAttendancePage}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: "#A020F0" },
+          headerTintColor: "#fff",
+          headerTitleStyle: { fontWeight: "700" },
+          title: "Mark Attendance"
+        }}
+      />
+      <Stack.Screen
+        name="AttendantReports"
+        component={AttendantReportsPage}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: "#A020F0" },
+          headerTintColor: "#fff",
+          headerTitleStyle: { fontWeight: "700" },
+          title: "Reports"
         }}
       />
     </Stack.Navigator>

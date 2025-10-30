@@ -52,7 +52,25 @@ export default function ManageUsers() {
       setUsers([...users, createdUser]);
       setModalVisible(false);
       setNewUser({ name: "", email: "", role: "Attendee" });
-      Alert.alert("Success", "User added successfully");
+      
+      if (createdUser.role === 'Attendant') {
+        Alert.alert(
+          "Attendant Added",
+          `${createdUser.name} has been added as an Attendant. They will receive an email with access link.\n\nFor testing: Navigate to AttendantDashboard`,
+          [
+            { text: "OK" },
+            { 
+              text: "Test Access", 
+              onPress: () => {
+                // For testing purposes - simulate attendant access
+                console.log("Test attendant access");
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert("Success", "User added successfully");
+      }
     } catch (error) {
       Alert.alert("Error", "Failed to add user");
     } finally {
