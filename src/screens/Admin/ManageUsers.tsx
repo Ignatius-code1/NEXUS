@@ -17,9 +17,13 @@ export default function ManageUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [newUser, setNewUser] = useState({ name: "", email: "", role: "Attendee" as const });
+  const [newUser, setNewUser] = useState<{ name: string; email: string; role: 'Attendee' | 'Attendant' | 'Admin' }>({ name: "", email: "", role: "Attendee" });
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [editUser, setEditUser] = useState<{ name: string; email: string; role: 'Attendee' | 'Attendant' | 'Admin' }>({ name: "", email: "", role: "Attendee" });
 
   useEffect(() => {
     loadUsers();
@@ -56,28 +60,54 @@ export default function ManageUsers() {
     }
   };
 
-  const handleDeleteUser = async (user: User, index: number) => {
-    Alert.alert(
-      "Delete User",
-      `Are you sure you want to delete ${user.name}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await adminApi.deleteUser(user.id);
-              const updated = users.filter((_, i) => i !== index);
-              setUsers(updated);
-              Alert.alert("Success", "User deleted successfully");
-            } catch (error) {
-              Alert.alert("Error", "Failed to delete user");
-            }
-          },
-        },
-      ]
-    );
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setEditUser({ name: user.name, email: user.email, role: user.role });
+    setEditModalVisible(true);
+  };
+
+  const handleDeleteUser = (user: User) => {
+    setSelectedUser(user);
+    setDeleteModalVisible(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editUser.name || !editUser.email || !selectedUser) {
+      Alert.alert("Error", "Please fill all fields");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await adminApi.updateUser(selectedUser.id, editUser);
+      const updatedUsers = users.map(u => 
+        u.id === selectedUser.id ? { ...u, ...editUser } : u
+      );
+      setUsers(updatedUsers);
+      setEditModalVisible(false);
+      Alert.alert("Success", "User updated successfully");
+    } catch (error) {
+      Alert.alert("Error", "Failed to update user");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedUser) return;
+
+    setSubmitting(true);
+    try {
+      await adminApi.deleteUser(selectedUser.id);
+      const updated = users.filter(u => u.id !== selectedUser.id);
+      setUsers(updated);
+      setDeleteModalVisible(false);
+      Alert.alert("Success", "User deleted successfully");
+    } catch (error) {
+      Alert.alert("Error", "Failed to delete user");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -117,9 +147,14 @@ export default function ManageUsers() {
             <View key={user.id || index} style={styles.card}>
               <View style={styles.cardHeader}>
                 <Text style={styles.userName}>{user.name}</Text>
-                <TouchableOpacity onPress={() => handleDeleteUser(user, index)}>
-                  <Ionicons name="trash-outline" size={20} color="#EF4444" />
-                </TouchableOpacity>
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity onPress={() => handleEditUser(user)} style={styles.editButton}>
+                    <Ionicons name="pencil-outline" size={18} color="#9b5cff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleDeleteUser(user)} style={styles.deleteButton}>
+                    <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
               </View>
               <Text style={styles.userEmail}>{user.email}</Text>
               <Text style={styles.serial}>Serial: {user.serial}</Text>
@@ -182,6 +217,89 @@ export default function ManageUsers() {
               )}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit User Modal */}
+      <Modal visible={editModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Edit User</Text>
+
+            <TextInput
+              placeholder="Full Name"
+              style={styles.input}
+              value={editUser.name}
+              onChangeText={(t) => setEditUser({ ...editUser, name: t })}
+            />
+            <TextInput
+              placeholder="Email"
+              style={styles.input}
+              value={editUser.email}
+              onChangeText={(t) => setEditUser({ ...editUser, email: t })}
+            />
+            
+            <View style={styles.roleSelector}>
+              <TouchableOpacity
+                style={[styles.roleButton, editUser.role === "Attendee" && styles.roleButtonActive]}
+                onPress={() => setEditUser({ ...editUser, role: "Attendee" })}
+              >
+                <Text style={[styles.roleButtonText, editUser.role === "Attendee" && styles.roleButtonTextActive]}>
+                  Attendee
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.roleButton, editUser.role === "Attendant" && styles.roleButtonActive]}
+                onPress={() => setEditUser({ ...editUser, role: "Attendant" })}
+              >
+                <Text style={[styles.roleButtonText, editUser.role === "Attendant" && styles.roleButtonTextActive]}>
+                  Attendant
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.saveBtn, submitting && styles.saveBtnDisabled]} 
+              onPress={handleSaveEdit}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text style={styles.saveBtnText}>Save Changes</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal visible={deleteModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Delete User</Text>
+            <Text style={styles.deleteMessage}>
+              Are you sure you want to delete {selectedUser?.name}? This action cannot be undone.
+            </Text>
+
+            <TouchableOpacity 
+              style={[styles.deleteConfirmBtn, submitting && styles.saveBtnDisabled]} 
+              onPress={handleConfirmDelete}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text style={styles.deleteBtnText}>Delete User</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setDeleteModalVisible(false)}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -303,5 +421,36 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     fontSize: 16,
+  },
+  actionButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  editButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: "#EAD9FF",
+  },
+  deleteButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: "#FEE2E2",
+  },
+  deleteMessage: {
+    fontSize: 16,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  deleteConfirmBtn: {
+    backgroundColor: "#EF4444",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  deleteBtnText: {
+    color: "#fff",
+    fontWeight: "700",
   },
 });

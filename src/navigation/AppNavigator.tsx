@@ -1,5 +1,4 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import OnboardingScreen from '../screens/Auth/OnboardingScreen';
 import LandingScreenIntro from '../screens/Auth/LandingScreenIntro';
@@ -10,12 +9,10 @@ import AdminUploadPage from '../screens/AdminUploadPage';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import AdminNavigator from './AdminNavigator';
 import DashboardScreen from '../screens/DashboardScreen';
-import AttendantPage from '../screens/Attendant/AttendantPage';
-import SessionsPage from '../screens/Attendant/SessionsPage';
-import AttendanceListPage from '../screens/Attendant/AttendanceListPage';
-import ReportsPage from '../screens/Attendant/ReportsPage';
-
-
+import AttendeeDashboardPage from '../screens/AttendeeDashboardPage';
+import MyUnitsPage from '../screens/Attendee/MyUnitsPage';
+import AttendanceHistoryPage from '../screens/Attendee/AttendanceHistoryPage';
+import MessagesPage from '../screens/Attendee/MessagesPage';
 
 const Stack = createNativeStackNavigator();
 
@@ -31,12 +28,50 @@ export default function AppNavigator() {
       <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
       <Stack.Screen name="AdminNav" component={AdminNavigator} options={{ headerShown: false }} />
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
-      <Stack.Screen name="Attendant" component={AttendantPage} />
-      <Stack.Screen name="AttendantSessions" component={SessionsPage} />
-      <Stack.Screen name="AttendanceList" component={AttendanceListPage} />
-      <Stack.Screen name="AttendantReports" component={ReportsPage} />
-      
-
+      <Stack.Screen
+        name="AttendeeDashboard"
+        component={AttendeeDashboardPage}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: "#A020F0" },
+          headerTintColor: "#fff",
+          headerTitleStyle: { fontWeight: "700" },
+          title: "Dashboard"
+        }}
+      />
+      <Stack.Screen
+        name="MyUnits"
+        component={MyUnitsPage}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: "#A020F0" },
+          headerTintColor: "#fff",
+          headerTitleStyle: { fontWeight: "700" },
+          title: "My Units"
+        }}
+      />
+      <Stack.Screen
+        name="AttendanceHistory"
+        component={AttendanceHistoryPage}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: "#A020F0" },
+          headerTintColor: "#fff",
+          headerTitleStyle: { fontWeight: "700" },
+          title: "Attendance History"
+        }}
+      />
+      <Stack.Screen
+        name="Messages"
+        component={MessagesPage}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: "#A020F0" },
+          headerTintColor: "#fff",
+          headerTitleStyle: { fontWeight: "700" },
+          title: "Messages"
+        }}
+      />
     </Stack.Navigator>
   );
 }
