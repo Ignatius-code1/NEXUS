@@ -1,0 +1,72 @@
+# Frontend (React Native) - Not needed for backend development
+src/
+node_modules/
+.expo/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+package.json
+package-lock.json
+tsconfig.json
+
+# Environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env
+*.env
+.env.*
+
+# IDE
+.vscode/
+
+# Documentation/guide files (personal notes)
+docs/
+
+
+# Sample CSV files
+nexus_backend/sample_*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+instance/
+*.db
+
+*.sqlite
+*.sqlite3
+nexus_backend/migrations/versions/*.py
+!nexus_backend/migrations/versions/__init__.py
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Frontend and database folders
+front-end/
+nexus_backend/db/

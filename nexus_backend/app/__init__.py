@@ -1,29 +1,42 @@
 from flask import Flask
-from flask_restful import Api
-from flask_cors import CORS
-from dotenv import load_dotenv
-import os
-# from .models import db  # TODO: Uncomment after pulling models from other branch
-from .routes.report_routes import report_bp
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_jwt_extended import JWTManager
+from app.config import Config
 
-load_dotenv()
+# Initialize extensions
+db = SQLAlchemy()
+migrate = Migrate()
+jwt = JWTManager()
 
 def create_app():
+    # Create Flask application
     app = Flask(__name__)
     
-    # Configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://postgres:password@localhost:5432/nexus_db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # Load configuration
+    app.config.from_object(Config)
     
-    # Initialize extensions
-    # db.init_app(app)  # TODO: Uncomment after pulling models from other branch
-    CORS(app)
-    api = Api(app)
+    # Initialize extensions with app
+    db.init_app(app)
+    migrate.init_app(app, db)
+    jwt.init_app(app)
+    
+    # Import models (needed for migrations)
+    from app.models import admin_model, attendant_model, attendee_model, password_reset, session_model, attendance
     
     # Register blueprints
-    app.register_blueprint(report_bp, url_prefix='/api/v1')
+    from app.routes.auth_routes import auth_bp
+    from app.routes.admin_routes import admin_bp
+    from app.routes.attendant_routes import attendant_bp
+    from app.routes.attendee_routes import attendee_bp
+    from app.routes.bulk_upload import bulk_bp
+    from app.routes.report_routes import report_bp
     
-    # with app.app_context():  # TODO: Uncomment after pulling models from other branch
-    #     db.create_all()
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(attendant_bp, url_prefix='/api/attendant')
+    app.register_blueprint(attendee_bp, url_prefix='/api/attendee')
+    app.register_blueprint(bulk_bp, url_prefix='/api/bulk')
+    app.register_blueprint(report_bp, url_prefix='/api/v1')
     
     return app
