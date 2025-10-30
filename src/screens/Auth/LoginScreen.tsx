@@ -3,8 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, TextInput, Aler
 import { colors } from "../../theme/colors";
 import { typography } from "../../theme/typography";
 import { shadows } from "../../theme/shadows";
-import InputField from "../../components/InputField";
-import PrimaryButton from "../../components/PrimaryButton";
 import { useNavigation } from "@react-navigation/native";
 import { authApi } from "../../services/authApi";
 

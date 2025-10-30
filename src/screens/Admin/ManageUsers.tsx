@@ -17,13 +17,13 @@ export default function ManageUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [newUser, setNewUser] = useState({ name: "", email: "", role: "Attendee" as const });
+  const [newUser, setNewUser] = useState<{ name: string; email: string; role: 'Attendee' | 'Attendant' | 'Admin' }>({ name: "", email: "", role: "Attendee" });
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [editUser, setEditUser] = useState({ name: "", email: "", role: "Attendee" as const });
+  const [editUser, setEditUser] = useState<{ name: string; email: string; role: 'Attendee' | 'Attendant' | 'Admin' }>({ name: "", email: "", role: "Attendee" });
 
   useEffect(() => {
     loadUsers();
