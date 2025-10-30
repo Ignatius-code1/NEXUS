@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Python
 __pycache__/
 *.py[cod]
@@ -22,3 +23,8 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+=======
+services/bluetoothservive.py
+services/device_service.py
+services/report_service.py
+>>>>>>> 00f41723bc8c435ea5303763c898af3a7fb50300
