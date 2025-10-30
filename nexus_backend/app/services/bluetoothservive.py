@@ -26,9 +26,7 @@
 from typing import Literal
 from app.utils.fingerprint import parse_and_validate
 from app.services.device_service import DeviceService
-from app.models.device_model import Device
-from app.db import db
-import logging
+
 
 
 
