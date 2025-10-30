@@ -66,4 +66,4 @@ logs/
 # Frontend and database folders
 
 nexus_backend/db/
-test_email.py
+*test_email.py
