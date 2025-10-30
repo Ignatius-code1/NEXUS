@@ -1,102 +1,12 @@
-<<<<<<< HEAD
-from datetime import datetime
-from typing import Optional
-from ..models import db, AdminSession
-
-class DeviceServiceError(Exception):
-    pass
-
-class DeviceService:
-    @staticmethod
-    def start_session(admin_id: int, ble_id: str) -> AdminSession:
-        """Start a BLE session for admin. Deactivates any existing active sessions first."""
-        # Deactivate existing active sessions for this admin
-        existing = AdminSession.query.filter_by(admin_id=admin_id, active=True).all()
-        for s in existing:
-            s.active = False
-            s.stopped_at = datetime.utcnow()
-        
-        # Find or create session
-        session = AdminSession.query.filter_by(admin_id=admin_id, ble_id=ble_id).first()
-        if session is None:
-            session = AdminSession(admin_id=admin_id, ble_id=ble_id)
-            db.session.add(session)
-        
-        # Activate session
-        session.active = True
-        session.started_at = datetime.utcnow()
-        session.stopped_at = None
-        
-=======
-# from datetime import datetime
-# .filter_by(admin_id=admin_id, active=True)
-# .with_for_update()
-# .all()
-
-# for s in existing:
-# s.active = False
-# s.stopped_at = datetime.utcnow()
-
-# session = adminSession.query.filter_by(admin_id=admin_id, ble_id=ble_id).first()
-# if session is None:
-# session = adminSession(admin_id=admin_id, ble_id=ble_id)
-# db.session.add(session)
-
-# session.active = True
-# session.started_at = datetime.utcnow()
-# session.stopped_at = None
-
-# try:
-# db.session.commit()
-# except Exception as e:
-# db.session.rollback()
-# raise DeviceServiceError(f"failed to start session: {e}")
-# return session
-
-# @staticmethod
-# def stop_session(admin_id: int, ble_id: Optional[str] = None) -> Optional[adminSession]:
-# #Stop the active session. If ble_id provided, stop that session; otherwise stop any active session for admin.
-# #Returns the stopped adminSession or None if none found.
-# query = adminSession.query.filter_by(admin_id=admin_id, active=True)
-# if ble_id is not None:
-# query = query.filter_by(ble_id=ble_id)
-
-# session = query.first()
-# if not session:
-# return None
-
-# session.active = False
-# session.stopped_at = datetime.utcnow()
-# try:
-# db.session.commit()
-# except Exception as e:
-# db.session.rollback()
-# raise DeviceServiceError(f"failed to stop session: {e}")
-# return session
-
-# @staticmethod
-# def is_ble_active(ble_id: str) -> bool:
-# #Return True if ble_id is currently active for any admin/session."""
-# return (
-# adminSession.query.filter_by(ble_id=ble_id, active=True).count() > 0
-# )
-
 from datetime import datetime, timezone
 from typing import Optional
 from app import db
 from app.models.session_model import Session
-from app.db import db
 from app.models.device_model import Device
-from app.models.admin_model import Admin
-from app.utils.fingerprint import verify_fingerprint, generate_fingerprint_id
-from sqlalchemy.exc import SQLAlchemyError
-
-
 
 class DeviceServiceError(Exception):
     """Custom exception for device service errors."""
     pass
-
 
 class DeviceService:
     """Handles activation and management of session states."""
@@ -124,33 +34,13 @@ class DeviceService:
         session.is_active = True
         session.created_at = datetime.now(timezone.utc)
 
->>>>>>> 00f41723bc8c435ea5303763c898af3a7fb50300
         try:
             db.session.commit()
         except Exception as e:
             db.session.rollback()
             raise DeviceServiceError(f"Failed to start session: {e}")
-<<<<<<< HEAD
-        return session
-    
-    @staticmethod
-    def stop_session(admin_id: int, ble_id: Optional[str] = None) -> Optional[AdminSession]:
-        """Stop active session. If ble_id provided, stop that session; otherwise stop any active session for admin."""
-        query = AdminSession.query.filter_by(admin_id=admin_id, active=True)
-        if ble_id is not None:
-            query = query.filter_by(ble_id=ble_id)
-        
-        session = query.first()
-        if not session:
-            return None
-        
-        session.active = False
-        session.stopped_at = datetime.utcnow()
-=======
 
         return session
-
-    # --------------------------------------------------------------
 
     @staticmethod
     def stop_session(session_id: int) -> Optional[Session]:
@@ -163,32 +53,13 @@ class DeviceService:
 
         session.is_active = False
 
->>>>>>> 00f41723bc8c435ea5303763c898af3a7fb50300
         try:
             db.session.commit()
         except Exception as e:
             db.session.rollback()
             raise DeviceServiceError(f"Failed to stop session: {e}")
-<<<<<<< HEAD
-        return session
-    
-    @staticmethod
-    def is_ble_active(ble_id: str) -> bool:
-        """Return True if ble_id is currently active for any admin/session."""
-        return AdminSession.query.filter_by(ble_id=ble_id, active=True).count() > 0
-    
-    @staticmethod
-    def get_active_sessions(admin_id: Optional[int] = None):
-        """Get all active sessions, optionally filtered by admin_id."""
-        query = AdminSession.query.filter_by(active=True)
-        if admin_id is not None:
-            query = query.filter_by(admin_id=admin_id)
-        return query.all()
-=======
 
         return session
-
-    # --------------------------------------------------------------
 
     @staticmethod
     def is_session_active(session_id: int) -> bool:
@@ -197,13 +68,9 @@ class DeviceService:
         """
         session = Session.query.get(session_id)
         return bool(session and session.is_active)
-    
 
     @staticmethod
     def is_ble_active(ble_id: str) -> bool:
         """Check if a device with the given BLE ID is registered and active."""
         device = Device.query.filter_by(ble_id=ble_id, is_active=True).first()
         return device is not None
-    
-    
->>>>>>> 00f41723bc8c435ea5303763c898af3a7fb50300

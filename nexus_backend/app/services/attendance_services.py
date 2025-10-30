@@ -1,7 +1,7 @@
 from app.services.bluetoothservive import is_attendance_valid
 from app.models.attendance import Attendance
 from app.models.device_model import Device
-from app.db import db
+from app import db
 from datetime import datetime
 
 

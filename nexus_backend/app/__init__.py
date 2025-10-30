@@ -31,6 +31,10 @@ def create_app():
     from app.routes.attendee_routes import attendee_bp
     from app.routes.bulk_upload import bulk_bp
     from app.routes.report_routes import report_bp
+    from app.resources.user_routes import user_bp
+    from app.resources.session_routes import session_bp
+    from app.resources.device_routes import device_bp
+    from app.resources.attendance_routes import attendance_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
@@ -38,5 +42,9 @@ def create_app():
     app.register_blueprint(attendee_bp, url_prefix='/api/attendee')
     app.register_blueprint(bulk_bp, url_prefix='/api/bulk')
     app.register_blueprint(report_bp, url_prefix='/api/v1')
+    app.register_blueprint(user_bp, url_prefix='/api')
+    app.register_blueprint(session_bp, url_prefix='/api')
+    app.register_blueprint(device_bp, url_prefix='/api')
+    app.register_blueprint(attendance_bp, url_prefix='/api')
     
     return app

@@ -12,14 +12,10 @@ class Attendant(db.Model):
     serial = db.Column(db.String(20), unique=True, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     last_login = db.Column(db.DateTime, nullable=True)
-<<<<<<< HEAD
 
     # Relationships
     sessions = db.relationship("Session", back_populates="attendant", lazy=True)
 
-=======
-    
->>>>>>> 00f41723bc8c435ea5303763c898af3a7fb50300
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
     

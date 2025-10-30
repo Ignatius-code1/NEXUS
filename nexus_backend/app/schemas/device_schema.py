@@ -1,18 +1,12 @@
 from marshmallow import Schema, fields, validate
 
-class DeviceSchema(Schema):
-    """Schema for validating and serializing device data."""
+class DeviceCreateSchema(Schema):
+    ble_id = fields.Str(required=True, validate=validate.Length(min=1, max=120))
+    device_name = fields.Str(validate=validate.Length(max=100))
 
-    id = fields.Int(dump_only=True)
-    user_id = fields.Int(required=True, description="Owner of the device (attendant ID)")
-    ble_id = fields.Str(required=True, validate=validate.Length(min=5))
-    device_name = fields.Str(required=True)
-    is_active = fields.Bool(dump_only=True)
-    registered_at = fields.DateTime(dump_only=True)
-
-
-class DeviceRegisterSchema(Schema):
-    """Schema for registering a new device (input-only)."""
-
-    ble_id = fields.Str(required=True, validate=validate.Length(min=5))
-    device_name = fields.Str(required=True)
+class DeviceResponseSchema(Schema):
+    id = fields.Int()
+    ble_id = fields.Str()
+    device_name = fields.Str()
+    is_active = fields.Bool()
+    last_activated = fields.DateTime()

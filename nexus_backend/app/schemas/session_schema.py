@@ -1,14 +1,14 @@
-from app import ma
-from app.models.session_model import Session
-from marshmallow import fields
+from marshmallow import Schema, fields, validate
 
-class SessionSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Session
-        load_instance = True
-        include_fk = True
+class SessionCreateSchema(Schema):
+    title = fields.Str(required=True, validate=validate.Length(min=1, max=120))
+    course_code = fields.Str(required=True, validate=validate.Length(min=1, max=50))
+    schedule = fields.Str(required=True)
 
-    attendant = fields.Nested("AttendantSchema", only=("id", "name", "email"))
-
-session_schema = SessionSchema()
-sessions_schema = SessionSchema(many=True)
+class SessionResponseSchema(Schema):
+    id = fields.Int()
+    title = fields.Str()
+    course_code = fields.Str()
+    schedule = fields.Str()
+    is_active = fields.Bool()
+    created_at = fields.DateTime()

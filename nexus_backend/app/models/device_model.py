@@ -1,8 +1,7 @@
-from app.db import db
-from sqlalchemy_serializer import SerializerMixin
+from app import db
 from datetime import datetime
 
-class Device(db.Model, SerializerMixin):
+class Device(db.Model):
     __tablename__ = "devices"
 
     id = db.Column(db.Integer, primary_key=True)
