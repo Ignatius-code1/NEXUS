@@ -1,6 +1,6 @@
 # app/schemas/attendance_schema.py
 from app import ma
-from app.models.attendance_model import Attendance
+from app.models.attendance import Attendance
 
 class AttendanceSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
