@@ -3,9 +3,8 @@ from flask_restful import Api
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
-from .models import db
-from .resources.report_routes import report_bp
-from .resources.session_routes import session_bp
+# from .models import db  # TODO: Uncomment after pulling models from other branch
+from .routes.report_routes import report_bp
 
 load_dotenv()
 
@@ -17,18 +16,14 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     # Initialize extensions
-    db.init_app(app)
+    # db.init_app(app)  # TODO: Uncomment after pulling models from other branch
     CORS(app)
     api = Api(app)
     
     # Register blueprints
-    app.register_blueprint(session_bp, url_prefix='/api/v1')
     app.register_blueprint(report_bp, url_prefix='/api/v1')
     
-    # Register error handlers
-    app.register_error_handler(APIError, handle_api_error)
-    
-    with app.app_context():
-        db.create_all()
+    # with app.app_context():  # TODO: Uncomment after pulling models from other branch
+    #     db.create_all()
     
     return app
