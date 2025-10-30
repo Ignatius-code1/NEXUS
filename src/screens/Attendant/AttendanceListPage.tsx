@@ -3,30 +3,49 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { Ionicons } from "@expo/vector-icons";
 import PrimaryButton from "../../components/PrimaryButton";
 import SearchBar from "../../components/SearchBar";
+import { attendantApi, Attendee, Session } from "../../services/attendantApi";
+import ErrorMessage from "../../components/ErrorMessage";
 import { colors } from "../../theme/colors";
 import { shadows } from "../../theme/shadows";
 
-type User = { id: string; name: string; serial: string; role: "attendee" | "attendant"; present?: boolean; email?: string };
-type Session = { id: string; title: string; courseCode?: string; date?: string };
+
 
 export default function AttendanceListPage({ route }: any) {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
-  const [students, setStudents] = useState<User[]>([]);
+  const [students, setStudents] = useState<Attendee[]>([]);
   const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setTimeout(() => {
-      setSession({ id: "s1", title: "Computer Science 101", courseCode: "CS101", date: "2025-10-29" });
-      setStudents([
-        { id: "u1", name: "Alice Johnson", serial: "001", role: "attendee", present: true, email: "alice@example.com" },
-        { id: "u2", name: "Bob Smith", serial: "002", role: "attendant", present: false, email: "bob@example.com" },
-        { id: "u3", name: "Charlie Brown", serial: "003", role: "attendee", present: false, email: "charlie@example.com" },
-      ]);
-      setLoading(false);
-    }, 600);
+    loadData();
   }, [route?.params]);
+
+  const loadData = async () => {
+    try {
+      const [attendeesData, sessionsData] = await Promise.all([
+        attendantApi.getAttendees(),
+        attendantApi.getSessions()
+      ]);
+      
+      setStudents(attendeesData.map(a => ({ ...a, present: false })));
+      
+      if (sessionsData.length > 0) {
+        const activeSession = sessionsData.find(s => !s.ended_at) || sessionsData[0];
+        setSession({
+          id: activeSession.id,
+          title: activeSession.title || `Session ${activeSession.id}`,
+          courseCode: activeSession.ble_id,
+          date: new Date(activeSession.started_at || new Date()).toISOString().split('T')[0]
+        });
+      }
+    } catch (error) {
+      setError('Failed to load data. Please check your connection.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggle = (id: string) => {
     setStudents((prev) => prev.map(s => s.id === id ? { ...s, present: !s.present } : s));
@@ -34,16 +53,26 @@ export default function AttendanceListPage({ route }: any) {
 
   const filteredStudents = students.filter(s =>
     s.name.toLowerCase().includes(query.toLowerCase()) ||
-    s.serial.toLowerCase().includes(query.toLowerCase()) ||
+    s.id.toLowerCase().includes(query.toLowerCase()) ||
     (s.email && s.email.toLowerCase().includes(query.toLowerCase()))
   );
 
   const handleSave = async () => {
+    if (!session) return;
+    
     setSaving(true);
-    setTimeout(() => {
+    try {
+      const promises = students
+        .filter(s => s.present)
+        .map(s => attendantApi.markAttendance(s.id, session.id, 'Present'));
+      
+      await Promise.all(promises);
+      Alert.alert('Saved', 'Attendance records updated.');
+    } catch (error) {
+      setError('Failed to save attendance. Please try again.');
+    } finally {
       setSaving(false);
-      Alert.alert("Saved", "Attendance records updated.");
-    }, 800);
+    }
   };
 
   if (loading) return <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />;
@@ -54,6 +83,8 @@ export default function AttendanceListPage({ route }: any) {
       <Text style={styles.sub}>Date: {session?.date} • Code: {session?.courseCode}</Text>
 
       <SearchBar query={query} onChange={setQuery} />
+      
+      {error && <ErrorMessage message={error} />}
 
       <ScrollView style={{ marginTop: 12 }}>
         {filteredStudents.length === 0 ? (
@@ -64,7 +95,7 @@ export default function AttendanceListPage({ route }: any) {
               <View style={styles.row}>
                 <View>
                   <Text style={styles.name}>{s.name}</Text>
-                  <Text style={styles.serial}>#{s.serial} • {s.role}</Text>
+                  <Text style={styles.serial}>ID: {s.id} • {s.role}</Text>
                   {s.email && <Text style={styles.email}>{s.email}</Text>}
                 </View>
 
