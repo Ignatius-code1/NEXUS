@@ -51,7 +51,10 @@ def create_session(current_user_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': 'Failed to create session'}), 500
+        print(f"❌ Error creating session: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to create session: {str(e)}'}), 500
 
 @attendant_bp.route('/attendance/<int:session_id>', methods=['POST'])
 @auth_required

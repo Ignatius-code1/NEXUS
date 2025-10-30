@@ -64,5 +64,6 @@ Thumbs.db
 logs/
 
 # Frontend and database folders
-front-end/
+
 nexus_backend/db/
+test_email.py

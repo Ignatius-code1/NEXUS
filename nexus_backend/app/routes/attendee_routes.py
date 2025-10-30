@@ -10,22 +10,80 @@ attendee_bp = Blueprint('attendee', __name__)
 @attendee_bp.route('/sessions', methods=['GET'])
 @auth_required
 def get_available_sessions(current_user_id):
-    """Get sessions available to this attendee"""
+    """Get sessions available to this attendee based on their registered units"""
     try:
-        # Get sessions where this user is a member
+        # Get attendee's registered units
+        attendee = Attendee.query.get(current_user_id)
+        if not attendee:
+            return jsonify({'error': 'Attendee not found'}), 404
+
+        # Get attendee's units as a list
+        attendee_units = [unit.strip() for unit in attendee.units.split(',')] if attendee.units else []
+
+        # Get all active sessions
         sessions = Session.query.filter(Session.is_active == True).all()
         available_sessions = []
-        
+
         for session in sessions:
-            if session.members:
-                import json
-                member_ids = json.loads(session.members)
-                if str(current_user_id) in member_ids:
-                    available_sessions.append(session.to_dict())
-        
+            # Check if session's course_code matches any of attendee's units
+            if session.course_code in attendee_units:
+                available_sessions.append(session.to_dict())
+
         return jsonify(available_sessions), 200
     except Exception as e:
         return jsonify({'error': 'Failed to fetch sessions'}), 500
+
+@attendee_bp.route('/sessions/<int:session_id>/join', methods=['POST'])
+@auth_required
+def join_session(current_user_id, session_id):
+    """Join a session and mark attendance"""
+    try:
+        # Get the session
+        session = Session.query.get(session_id)
+        if not session:
+            return jsonify({'error': 'Session not found'}), 404
+
+        if not session.is_active:
+            return jsonify({'error': 'Session is not active'}), 400
+
+        # Get attendee
+        attendee = Attendee.query.get(current_user_id)
+        if not attendee:
+            return jsonify({'error': 'Attendee not found'}), 404
+
+        # Check if attendee is registered for this course
+        attendee_units = [unit.strip() for unit in attendee.units.split(',')] if attendee.units else []
+        if session.course_code not in attendee_units:
+            return jsonify({'error': 'You are not registered for this course'}), 403
+
+        # Check if already marked attendance
+        existing_attendance = Attendance.query.filter_by(
+            attendee_id=current_user_id,
+            session_id=session_id
+        ).first()
+
+        if existing_attendance:
+            return jsonify({
+                'message': 'Attendance already marked',
+                'attendance': existing_attendance.to_dict()
+            }), 200
+
+        # Mark attendance
+        attendance = Attendance(
+            attendee_id=current_user_id,
+            session_id=session_id,
+            status='Present'
+        )
+
+        db.session.add(attendance)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Attendance marked successfully',
+            'attendance': attendance.to_dict()
+        }), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @attendee_bp.route('/attendance', methods=['GET'])
 @auth_required

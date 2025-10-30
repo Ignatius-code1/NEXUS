@@ -5,9 +5,62 @@ from app.models.attendant_model import Attendant
 from app.models.attendee_model import Attendee
 from app.models.password_reset import PasswordReset
 from app.utils.auth import generate_token
-from app.utils.email import send_reset_email
+from app.utils.email import send_reset_email, send_welcome_email
 
 auth_bp = Blueprint('auth', __name__)
+
+@auth_bp.route('/register', methods=['POST'])
+def register_admin():
+    """Register new admin account (organization signup)"""
+    try:
+        data = request.get_json()
+
+        # Validate input
+        if not data or not data.get('name') or not data.get('email') or not data.get('password'):
+            return jsonify({'error': 'Name, email, and password required'}), 400
+
+        if not data.get('organizationName'):
+            return jsonify({'error': 'Organization name required'}), 400
+
+        email = data['email']
+        name = data['name']
+        organization = data['organizationName']
+        password = data['password']
+
+        # Check if email already exists in any table
+        if (Admin.query.filter_by(email=email).first() or
+            Attendant.query.filter_by(email=email).first() or
+            Attendee.query.filter_by(email=email).first()):
+            return jsonify({'error': 'Email already registered'}), 400
+
+        # Create admin user
+        admin = Admin(
+            name=f"{name} ({organization})",
+            email=email
+        )
+        admin.set_password(password)
+
+        db.session.add(admin)
+        db.session.commit()
+
+        # Send welcome email
+        try:
+            send_welcome_email(email, name, password)
+        except:
+            pass  # Don't fail registration if email fails
+
+        # Auto-login: generate token
+        token = generate_token(f"admin_{admin.id}")
+
+        return jsonify({
+            'message': 'Admin account created successfully',
+            'user': admin.to_dict(),
+            'token': token
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Registration failed'}), 500
 
 @auth_bp.route('/login', methods=['POST'])
 def login():

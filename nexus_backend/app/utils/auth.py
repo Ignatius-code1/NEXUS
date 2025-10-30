@@ -31,7 +31,14 @@ def auth_required(f):
     def decorated_function(*args, **kwargs):
         try:
             current_user_id = get_jwt_identity()
-            return f(current_user_id, *args, **kwargs)
+
+            # Extract numeric ID from token (format: "attendant_2", "attendee_6", "admin_1")
+            if isinstance(current_user_id, str) and '_' in current_user_id:
+                user_id = int(current_user_id.split('_')[1])
+            else:
+                user_id = current_user_id
+
+            return f(user_id, *args, **kwargs)
         except Exception as e:
             return jsonify({'error': 'Invalid token'}), 401
     return decorated_function

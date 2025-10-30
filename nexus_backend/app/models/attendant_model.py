@@ -10,11 +10,13 @@ class Attendant(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     serial = db.Column(db.String(20), unique=True, nullable=True)
+    units = db.Column(db.Text, nullable=True)  # Comma-separated list of units/classes
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     last_login = db.Column(db.DateTime, nullable=True)
 
     # Relationships
     sessions = db.relationship("Session", back_populates="attendant", lazy=True)
+    devices = db.relationship("Device", back_populates="attendant", lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -36,6 +38,7 @@ class Attendant(db.Model):
             'email': self.email,
             'role': 'Attendant',
             'serial': self.serial,
+            'units': self.units.split(',') if self.units else [],
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None
         }

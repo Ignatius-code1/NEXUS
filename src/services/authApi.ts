@@ -22,6 +22,13 @@ class AuthApiService {
     }
   }
 
+  async register(name: string, email: string, organizationName: string, password: string): Promise<{ user: { id: string; email: string; role: string; name: string }; token: string; message: string }> {
+    return this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, organizationName, password }),
+    });
+  }
+
   async login(email: string, password: string): Promise<{ user: { id: string; email: string; role: string; name: string }; token: string }> {
     return this.request('/auth/login', {
       method: 'POST',

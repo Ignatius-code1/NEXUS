@@ -15,6 +15,7 @@ def create_user_from_row(row, user_type):
     """Create a single user (Attendee or Attendant) from CSV row"""
     name = row.get('name', '').strip()
     email = row.get('email', '').strip().lower()
+    units = row.get('units', '').strip()  # Get units/classes
 
     # Skip if missing data
     if not name or not email:
@@ -24,11 +25,11 @@ def create_user_from_row(row, user_type):
     if user_type == 'Attendee':
         if Attendee.query.filter_by(email=email).first():
             raise Exception('Email already exists')
-        user = Attendee(name=name, email=email)
+        user = Attendee(name=name, email=email, units=units if units else None)
     else:  # Attendant
         if Attendant.query.filter_by(email=email).first():
             raise Exception('Email already exists')
-        user = Attendant(name=name, email=email)
+        user = Attendant(name=name, email=email, units=units if units else None)
 
     # Set password and save
     temp_password = secrets.token_urlsafe(8)
@@ -45,6 +46,7 @@ def create_user_from_row(row, user_type):
         'email': user.email,
         'role': user_type,
         'serial': user.serial,
+        'units': units if units else '',
         'password': temp_password
     }
 
