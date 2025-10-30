@@ -1,18 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert } from "react-native";
 import PrimaryButton from "../../components/PrimaryButton";
+import { attendantApi, Session } from "../../services/attendantApi";
+import ErrorMessage from "../../components/ErrorMessage";
 import { colors } from "../../theme/colors";
 import { shadows } from "../../theme/shadows";
 
-type Session = {
-  id: string;
-  title: string;
-  courseCode?: string;
-  instructor?: string;
-  startTime?: string;
-  endTime?: string;
-  isActive?: boolean;
-};
+
 
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -20,40 +14,45 @@ export default function SessionsPage() {
   const [modalVisible, setModalVisible] = useState(false);
   const [newSession, setNewSession] = useState({ title: "", courseCode: "", startTime: "", endTime: "" });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const mock: Session[] = [
-      { id: "s1", title: "Computer Science 101", courseCode: "CS101", instructor: "Jane Smith", startTime: "09:00", endTime: "10:30", isActive: true },
-      { id: "s2", title: "Mathematics 201", courseCode: "MATH201", instructor: "John Doe", startTime: "11:00", endTime: "12:30", isActive: false },
-    ];
-    setTimeout(() => {
-      setSessions(mock);
-      setLoading(false);
-    }, 600);
+    loadSessions();
   }, []);
+
+  const loadSessions = async () => {
+    try {
+      const data = await attendantApi.getSessions();
+      setSessions(data);
+    } catch (error) {
+      setError('Failed to load sessions. Please check your connection.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreate = async () => {
     if (!newSession.title || !newSession.startTime || !newSession.endTime) {
-      Alert.alert("Validation", "Please fill title, start and end times.");
+      Alert.alert('Validation', 'Please fill title, start and end times.');
       return;
     }
     setSaving(true);
-    setTimeout(() => {
-      const next: Session = {
-        id: `s${Date.now()}`,
+    try {
+      const created = await attendantApi.createSession({
         title: newSession.title,
         courseCode: newSession.courseCode,
         startTime: newSession.startTime,
-        endTime: newSession.endTime,
-        instructor: "You (Attendant)",
-        isActive: true,
-      };
-      setSessions([next, ...sessions]);
+        endTime: newSession.endTime
+      });
+      setSessions([created, ...sessions]);
       setModalVisible(false);
-      setNewSession({ title: "", courseCode: "", startTime: "", endTime: "" });
+      setNewSession({ title: '', courseCode: '', startTime: '', endTime: '' });
+      Alert.alert('Created', 'Session created and started.');
+    } catch (error) {
+      setError('Failed to create session. Please try again.');
+    } finally {
       setSaving(false);
-      Alert.alert("Created", "Session created and started.");
-    }, 800);
+    }
   };
 
   return (
@@ -62,6 +61,8 @@ export default function SessionsPage() {
       <Text style={styles.sub}>Create and manage sessions for check-ins</Text>
 
       <PrimaryButton label="Create New Session" onPress={() => setModalVisible(true)} />
+      
+      {error && <ErrorMessage message={error} />}
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
@@ -70,11 +71,11 @@ export default function SessionsPage() {
           {sessions.map((s) => (
             <View key={s.id} style={styles.card}>
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={styles.title}>{s.title}</Text>
-                <Text style={[styles.status, { color: s.isActive ? "#065F46" : "#991B1B" }]}>{s.isActive ? "Active" : "Inactive"}</Text>
+                <Text style={styles.title}>{s.title || `Session ${s.id}`}</Text>
+                <Text style={[styles.status, { color: s.ended_at ? "#991B1B" : "#065F46" }]}>{s.ended_at ? "Ended" : "Active"}</Text>
               </View>
-              <Text style={styles.meta}>{s.courseCode} • {s.instructor}</Text>
-              <Text style={styles.metaSmall}>Time: {s.startTime} - {s.endTime}</Text>
+              <Text style={styles.meta}>BLE ID: {s.ble_id}</Text>
+              <Text style={styles.metaSmall}>Started: {s.started_at ? new Date(s.started_at).toLocaleString() : 'Not started'}</Text>
             </View>
           ))}
         </ScrollView>
