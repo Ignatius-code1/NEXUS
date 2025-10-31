@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import FindSessionModal from "./FindSessionModal";
+import ScanSessionsModal from "./ScanSessionsModal";
 
 // API Base URL - uses environment variable or falls back to current IP
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://172.30.39.233:3000/api";
@@ -26,6 +27,7 @@ export default function AttendeeDashboard({ navigation }: any) {
   });
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState("");
+  const [scanModalVisible, setScanModalVisible] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -123,6 +125,25 @@ export default function AttendeeDashboard({ navigation }: any) {
         </View>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Scan for Sessions Button */}
+      <View style={styles.scanSessionContainer}>
+        <TouchableOpacity
+          style={styles.scanSessionButton}
+          onPress={() => setScanModalVisible(true)}
+        >
+          <View style={styles.scanSessionIcon}>
+            <Text style={styles.scanSessionEmoji}>📡</Text>
+          </View>
+          <View style={styles.scanSessionContent}>
+            <Text style={styles.scanSessionTitle}>Scan for Active Sessions</Text>
+            <Text style={styles.scanSessionSubtitle}>
+              Find and join any active session
+            </Text>
+          </View>
+          <Text style={styles.scanSessionArrow}>›</Text>
         </TouchableOpacity>
       </View>
 
@@ -272,6 +293,13 @@ export default function AttendeeDashboard({ navigation }: any) {
         onClose={() => setModalVisible(false)}
         unit={selectedUnit}
         onAttendanceMarked={handleAttendanceMarked}
+      />
+
+      {/* Scan Sessions Modal */}
+      <ScanSessionsModal
+        visible={scanModalVisible}
+        onClose={() => setScanModalVisible(false)}
+        onSessionJoined={handleAttendanceMarked}
       />
     </ScrollView>
   );
@@ -551,6 +579,52 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6E6E73",
     lineHeight: 20,
+  },
+  scanSessionContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+  },
+  scanSessionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#10b981",
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: "#10b981",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  scanSessionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  scanSessionEmoji: {
+    fontSize: 28,
+  },
+  scanSessionContent: {
+    flex: 1,
+  },
+  scanSessionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: 4,
+  },
+  scanSessionSubtitle: {
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.9)",
+  },
+  scanSessionArrow: {
+    fontSize: 28,
+    color: "#FFFFFF",
+    fontWeight: "300",
   },
 });
 

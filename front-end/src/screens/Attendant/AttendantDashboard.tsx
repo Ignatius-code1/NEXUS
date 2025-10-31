@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import StartSessionModal from "./StartSessionModal";
+import CreateSessionModal from "./CreateSessionModal";
 
 // API Base URL - uses environment variable or falls back to current IP
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://172.30.39.233:3000/api";
@@ -21,6 +22,7 @@ export default function AttendantDashboard({ navigation }: any) {
   const [sessions, setSessions] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState("");
+  const [createModalVisible, setCreateModalVisible] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -78,6 +80,44 @@ export default function AttendantDashboard({ navigation }: any) {
     loadDashboardData();
   };
 
+  const handleEndSession = (sessionId: number, sessionTitle: string) => {
+    Alert.alert(
+      "End Session",
+      `Are you sure you want to end "${sessionTitle}"? Students will no longer be able to join.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "End Session",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem("token");
+              const response = await fetch(
+                `${API_BASE_URL}/attendant/sessions/${sessionId}/end`,
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+
+              if (response.ok) {
+                Alert.alert("Success", "Session ended successfully");
+                loadDashboardData();
+              } else {
+                Alert.alert("Error", "Failed to end session");
+              }
+            } catch (error) {
+              console.error("Failed to end session:", error);
+              Alert.alert("Error", "Failed to end session");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -97,6 +137,25 @@ export default function AttendantDashboard({ navigation }: any) {
         </View>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Start Session Button */}
+      <View style={styles.startSessionContainer}>
+        <TouchableOpacity
+          style={styles.startSessionButton}
+          onPress={() => setCreateModalVisible(true)}
+        >
+          <View style={styles.startSessionIcon}>
+            <Text style={styles.startSessionEmoji}>📡</Text>
+          </View>
+          <View style={styles.startSessionContent}>
+            <Text style={styles.startSessionTitle}>Start New Session</Text>
+            <Text style={styles.startSessionSubtitle}>
+              Create a session for students to join
+            </Text>
+          </View>
+          <Text style={styles.startSessionArrow}>›</Text>
         </TouchableOpacity>
       </View>
 
@@ -168,6 +227,14 @@ export default function AttendantDashboard({ navigation }: any) {
               <Text style={styles.sessionInfo}>
                 Members: {session.members?.length || 0}
               </Text>
+              {session.isActive && (
+                <TouchableOpacity
+                  style={styles.endSessionButton}
+                  onPress={() => handleEndSession(session.id, session.title)}
+                >
+                  <Text style={styles.endSessionButtonText}>End Session</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ))
         )}
@@ -227,11 +294,18 @@ export default function AttendantDashboard({ navigation }: any) {
         </Text>
       </View>
 
-      {/* Start Session Modal */}
+      {/* Start Session Modal (for unit-specific sessions) */}
       <StartSessionModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         unit={selectedUnit}
+        onSessionCreated={handleSessionCreated}
+      />
+
+      {/* Create Session Modal (for general sessions) */}
+      <CreateSessionModal
+        visible={createModalVisible}
+        onClose={() => setCreateModalVisible(false)}
         onSessionCreated={handleSessionCreated}
       />
     </ScrollView>
@@ -481,6 +555,64 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6E6E73",
     lineHeight: 20,
+  },
+  startSessionContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+  },
+  startSessionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#4d88ff",
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: "#4d88ff",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  startSessionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  startSessionEmoji: {
+    fontSize: 28,
+  },
+  startSessionContent: {
+    flex: 1,
+  },
+  startSessionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: 4,
+  },
+  startSessionSubtitle: {
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.9)",
+  },
+  startSessionArrow: {
+    fontSize: 28,
+    color: "#FFFFFF",
+    fontWeight: "300",
+  },
+  endSessionButton: {
+    backgroundColor: "#EF4444",
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 12,
+    alignItems: "center",
+  },
+  endSessionButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });
 

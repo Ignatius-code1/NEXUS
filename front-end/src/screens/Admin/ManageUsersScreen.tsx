@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  Modal,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -26,6 +27,13 @@ export default function ManageUsersScreen({ navigation }: any) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    role: "Attendee",
+  });
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -42,13 +50,67 @@ export default function ManageUsersScreen({ navigation }: any) {
 
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.users || []);
+        // Backend returns array directly, not wrapped in object
+        setUsers(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error("Failed to load users:", error);
       Alert.alert("Error", "Failed to load users");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    // Validate inputs
+    if (!newUser.name.trim()) {
+      Alert.alert("Error", "Please enter a name");
+      return;
+    }
+    if (!newUser.email.trim()) {
+      Alert.alert("Error", "Please enter an email");
+      return;
+    }
+    if (!newUser.email.includes("@")) {
+      Alert.alert("Error", "Please enter a valid email");
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: newUser.name.trim(),
+          email: newUser.email.trim().toLowerCase(),
+          role: newUser.role,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert(
+          "Success",
+          `User created successfully! A temporary password has been sent to ${newUser.email}`,
+          [{ text: "OK" }]
+        );
+        setShowAddModal(false);
+        setNewUser({ name: "", email: "", role: "Attendee" });
+        loadUsers(); // Reload the users list
+      } else {
+        Alert.alert("Error", data.error || "Failed to create user");
+      }
+    } catch (error) {
+      console.error("Failed to create user:", error);
+      Alert.alert("Error", "Failed to create user. Please try again.");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -91,10 +153,18 @@ export default function ManageUsersScreen({ navigation }: any) {
         >
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Manage Users</Text>
-        <Text style={styles.subtitle}>
-          Total Users: {users.length}
-        </Text>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.title}>Manage Users</Text>
+            <Text style={styles.subtitle}>Total Users: {users.length}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => setShowAddModal(true)}
+          >
+            <Text style={styles.addButtonText}>+ Add User</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search Bar */}
@@ -147,6 +217,123 @@ export default function ManageUsersScreen({ navigation }: any) {
           Tip: Use the CSV Upload feature to add multiple users at once.
         </Text>
       </View>
+
+      {/* Add User Modal */}
+      <Modal
+        visible={showAddModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add New User</Text>
+
+            {/* Name Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter full name"
+                value={newUser.name}
+                onChangeText={(text) =>
+                  setNewUser({ ...newUser, name: text })
+                }
+              />
+            </View>
+
+            {/* Email Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter email address"
+                value={newUser.email}
+                onChangeText={(text) =>
+                  setNewUser({ ...newUser, email: text })
+                }
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            {/* Role Selection */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Role</Text>
+              <View style={styles.roleButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.roleButton,
+                    newUser.role === "Attendee" && styles.roleButtonActive,
+                  ]}
+                  onPress={() => setNewUser({ ...newUser, role: "Attendee" })}
+                >
+                  <Text
+                    style={[
+                      styles.roleButtonText,
+                      newUser.role === "Attendee" &&
+                        styles.roleButtonTextActive,
+                    ]}
+                  >
+                    Attendee
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.roleButton,
+                    newUser.role === "Attendant" && styles.roleButtonActive,
+                  ]}
+                  onPress={() =>
+                    setNewUser({ ...newUser, role: "Attendant" })
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.roleButtonText,
+                      newUser.role === "Attendant" &&
+                        styles.roleButtonTextActive,
+                    ]}
+                  >
+                    Attendant
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Info Text */}
+            <View style={styles.modalInfo}>
+              <Text style={styles.modalInfoText}>
+                ℹ️ A temporary password will be sent to the user's email
+              </Text>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setShowAddModal(false);
+                  setNewUser({ name: "", email: "", role: "Attendee" });
+                }}
+                disabled={creating}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.createButton}
+                onPress={handleCreateUser}
+                disabled={creating}
+              >
+                {creating ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.createButtonText}>Create User</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -300,6 +487,119 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#1e40af",
     lineHeight: 20,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  addButton: {
+    backgroundColor: "#9b5cff",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 24,
+    width: "90%",
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1C1C1E",
+    marginBottom: 20,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1C1C1E",
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: "#1C1C1E",
+  },
+  roleButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  roleButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: "#f5f5f5",
+    alignItems: "center",
+  },
+  roleButtonActive: {
+    backgroundColor: "#9b5cff",
+  },
+  roleButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6b7280",
+  },
+  roleButtonTextActive: {
+    color: "#fff",
+  },
+  modalInfo: {
+    backgroundColor: "#eff6ff",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  modalInfoText: {
+    fontSize: 13,
+    color: "#1e40af",
+    lineHeight: 18,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: "#f5f5f5",
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#6b7280",
+  },
+  createButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: "#9b5cff",
+    alignItems: "center",
+  },
+  createButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
   },
 });
 

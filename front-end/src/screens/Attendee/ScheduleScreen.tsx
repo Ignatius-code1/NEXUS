@@ -6,20 +6,27 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-interface ClassSchedule {
-  unit: string;
-  day: string;
-  time: string;
-  room: string;
+// API Base URL - uses environment variable or falls back to current IP
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://172.30.39.233:3000/api";
+
+interface SessionSchedule {
+  id: number;
+  courseCode: string;
+  title: string;
+  attendantName: string;
+  schedule: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
 export default function ScheduleScreen({ navigation }: any) {
-  const [schedule, setSchedule] = useState<ClassSchedule[]>([]);
+  const [sessions, setSessions] = useState<SessionSchedule[]>([]);
   const [loading, setLoading] = useState(true);
-  const [units, setUnits] = useState<string[]>([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
 
   useEffect(() => {
     loadSchedule();
@@ -27,56 +34,35 @@ export default function ScheduleScreen({ navigation }: any) {
 
   const loadSchedule = async () => {
     try {
-      const user = await AsyncStorage.getItem("user");
-      const userData = user ? JSON.parse(user) : null;
-      
-      if (userData?.units) {
-        const userUnits = userData.units.split(",").map((u: string) => u.trim());
-        setUnits(userUnits);
-        
-        // Generate sample schedule based on user's units
-        const sampleSchedule: ClassSchedule[] = userUnits.flatMap((unit: string, index: number) => {
-          const days = ["Monday", "Wednesday", "Friday"];
-          const times = ["08:00 AM - 10:00 AM", "10:30 AM - 12:30 PM", "02:00 PM - 04:00 PM"];
-          const rooms = ["Room 101", "Room 202", "Lab 3", "Hall A"];
-          
-          return days.map((day, dayIndex) => ({
-            unit,
-            day,
-            time: times[(index + dayIndex) % times.length],
-            room: rooms[(index + dayIndex) % rooms.length],
-          }));
-        });
-        
-        setSchedule(sampleSchedule);
+      const token = await AsyncStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/attendee/schedule`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEnrolledCourses(data.enrolledCourses || []);
+        setSessions(data.sessions || []);
+      } else {
+        Alert.alert("Error", "Failed to load schedule");
       }
     } catch (error) {
       console.error("Failed to load schedule:", error);
+      Alert.alert("Error", "Failed to load schedule");
     } finally {
       setLoading(false);
     }
   };
 
-  const getDayColor = (day: string) => {
-    const colors: { [key: string]: string } = {
-      Monday: "#eff6ff",
-      Tuesday: "#f0fdf4",
-      Wednesday: "#fef3c7",
-      Thursday: "#fce7f3",
-      Friday: "#f3e8ff",
-      Saturday: "#fee2e2",
-      Sunday: "#f5f5f5",
-    };
-    return colors[day] || "#f5f5f5";
-  };
-
-  const groupByDay = () => {
-    const grouped: { [key: string]: ClassSchedule[] } = {};
-    schedule.forEach((item) => {
-      if (!grouped[item.day]) {
-        grouped[item.day] = [];
+  const groupByCourse = () => {
+    const grouped: { [key: string]: SessionSchedule[] } = {};
+    sessions.forEach((session) => {
+      if (!grouped[session.courseCode]) {
+        grouped[session.courseCode] = [];
       }
-      grouped[item.day].push(item);
+      grouped[session.courseCode].push(session);
     });
     return grouped;
   };
@@ -90,8 +76,7 @@ export default function ScheduleScreen({ navigation }: any) {
     );
   }
 
-  const groupedSchedule = groupByDay();
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  const groupedSessions = groupByCourse();
 
   return (
     <View style={styles.container}>
@@ -103,55 +88,69 @@ export default function ScheduleScreen({ navigation }: any) {
         >
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Class Schedule</Text>
-        <Text style={styles.subtitle}>Your weekly timetable</Text>
+        <Text style={styles.title}>My Schedule</Text>
+        <Text style={styles.subtitle}>
+          {enrolledCourses.length} Enrolled Course{enrolledCourses.length !== 1 ? 's' : ''}
+        </Text>
       </View>
 
       <ScrollView style={styles.scheduleList}>
-        {schedule.length === 0 ? (
+        {sessions.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>📅</Text>
-            <Text style={styles.emptyText}>No schedule available</Text>
+            <Text style={styles.emptyText}>No sessions scheduled</Text>
             <Text style={styles.emptySubtext}>
-              Your class schedule will appear here once you're registered for units
+              Sessions will appear here once you join or are enrolled in courses
             </Text>
           </View>
         ) : (
-          days.map((day) => (
-            <View key={day} style={styles.daySection}>
-              <Text style={styles.dayTitle}>{day}</Text>
-              {groupedSchedule[day] && groupedSchedule[day].length > 0 ? (
-                groupedSchedule[day].map((item, index) => (
-                  <View
-                    key={`${day}-${index}`}
-                    style={[
-                      styles.classCard,
-                      { backgroundColor: getDayColor(day) },
-                    ]}
-                  >
-                    <View style={styles.classHeader}>
-                      <Text style={styles.className}>{item.unit}</Text>
-                      <Text style={styles.classRoom}>📍 {item.room}</Text>
+          Object.keys(groupedSessions).map((courseCode) => (
+            <View key={courseCode} style={styles.courseSection}>
+              <Text style={styles.courseTitle}>📚 {courseCode}</Text>
+              {groupedSessions[courseCode].map((session) => (
+                <View
+                  key={session.id}
+                  style={[
+                    styles.sessionCard,
+                    { backgroundColor: session.isActive ? "#E8F5E9" : "#F5F5F7" },
+                  ]}
+                >
+                  <View style={styles.sessionHeader}>
+                    <View style={styles.sessionInfo}>
+                      <Text style={styles.sessionTitle}>{session.title}</Text>
+                      <Text style={styles.sessionInstructor}>
+                        👤 {session.attendantName}
+                      </Text>
+                      <Text style={styles.sessionSchedule}>
+                        🕐 {session.schedule}
+                      </Text>
                     </View>
-                    <Text style={styles.classTime}>🕐 {item.time}</Text>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        session.isActive
+                          ? styles.statusActive
+                          : styles.statusEnded,
+                      ]}
+                    >
+                      <Text style={styles.statusText}>
+                        {session.isActive ? "Active" : "Ended"}
+                      </Text>
+                    </View>
                   </View>
-                ))
-              ) : (
-                <View style={styles.noClassCard}>
-                  <Text style={styles.noClassText}>No classes scheduled</Text>
                 </View>
-              )}
+              ))}
             </View>
           ))
         )}
       </ScrollView>
 
       {/* Info Card */}
-      {schedule.length > 0 && (
+      {sessions.length > 0 && (
         <View style={styles.infoCard}>
           <Text style={styles.infoEmoji}>💡</Text>
           <Text style={styles.infoText}>
-            Make sure to attend all your scheduled classes to maintain good attendance.
+            Active sessions are currently accepting attendance. Join them to mark your presence!
           </Text>
         </View>
       )}
@@ -209,49 +208,61 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  daySection: {
+  courseSection: {
     marginBottom: 24,
   },
-  dayTitle: {
+  courseTitle: {
     fontSize: 18,
     fontWeight: "600",
     color: "#1C1C1E",
     marginBottom: 12,
   },
-  classCard: {
+  sessionCard: {
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
-  classHeader: {
+  sessionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
+    alignItems: "flex-start",
   },
-  className: {
+  sessionInfo: {
+    flex: 1,
+  },
+  sessionTitle: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1C1C1E",
+    marginBottom: 6,
   },
-  classRoom: {
-    fontSize: 13,
+  sessionInstructor: {
+    fontSize: 14,
     color: "#6b7280",
+    marginBottom: 4,
   },
-  classTime: {
+  sessionSchedule: {
     fontSize: 14,
     color: "#4b5563",
   },
-  noClassCard: {
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "#f9fafb",
-    alignItems: "center",
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  noClassText: {
-    fontSize: 14,
-    color: "#9ca3af",
-    fontStyle: "italic",
+  statusActive: {
+    backgroundColor: "#10b981",
+  },
+  statusEnded: {
+    backgroundColor: "#9ca3af",
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    textTransform: "uppercase",
   },
   emptyContainer: {
     alignItems: "center",

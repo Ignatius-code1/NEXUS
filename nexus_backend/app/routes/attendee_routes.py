@@ -51,10 +51,25 @@ def join_session(current_user_id, session_id):
         if not attendee:
             return jsonify({'error': 'Attendee not found'}), 404
 
-        # Check if attendee is registered for this course
+        # Check if attendee is already in another active session
+        active_sessions = Session.query.filter(Session.is_active == True).all()
+        for active_session in active_sessions:
+            existing_attendance = Attendance.query.filter_by(
+                attendee_id=current_user_id,
+                session_id=active_session.id
+            ).first()
+
+            if existing_attendance and active_session.id != session_id:
+                return jsonify({
+                    'error': f'You are already in another active session: "{active_session.title}". Please wait for it to end before joining a new session.'
+                }), 409
+
+        # Auto-enroll attendee in the course if not already enrolled
         attendee_units = [unit.strip() for unit in attendee.units.split(',')] if attendee.units else []
         if session.course_code not in attendee_units:
-            return jsonify({'error': 'You are not registered for this course'}), 403
+            # Add the course to attendee's units (auto-enrollment)
+            attendee_units.append(session.course_code)
+            attendee.units = ','.join(attendee_units)
 
         # Check if already marked attendance
         existing_attendance = Attendance.query.filter_by(
@@ -134,3 +149,75 @@ def get_profile(current_user_id):
         return jsonify(profile), 200
     except Exception as e:
         return jsonify({'error': 'Failed to fetch profile'}), 500
+
+@attendee_bp.route('/sessions/scan', methods=['GET'])
+@auth_required
+def scan_all_sessions(current_user_id):
+    """Scan for ALL active sessions (not filtered by enrolled courses)"""
+    try:
+        # Get all active sessions
+        sessions = Session.query.filter(Session.is_active == True).all()
+
+        print(f"🔍 Scanning sessions for attendee {current_user_id}")
+        print(f"📊 Found {len(sessions)} active sessions")
+
+        # Get attendee to check which courses they're enrolled in
+        attendee = Attendee.query.get(current_user_id)
+        attendee_units = [unit.strip() for unit in attendee.units.split(',')] if attendee and attendee.units else []
+
+        print(f"👤 Attendee units: {attendee_units}")
+
+        # Return all sessions with enrollment status
+        all_sessions = []
+        for session in sessions:
+            session_dict = session.to_dict()
+            session_dict['isEnrolled'] = session.course_code in attendee_units
+            all_sessions.append(session_dict)
+            print(f"  ✅ Session: {session.title} ({session.course_code}) - Active: {session.is_active}")
+
+        return jsonify(all_sessions), 200
+    except Exception as e:
+        print(f"❌ Error scanning sessions: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Failed to scan sessions'}), 500
+
+@attendee_bp.route('/schedule', methods=['GET'])
+@auth_required
+def get_schedule(current_user_id):
+    """Get attendee's class schedule based on enrolled courses"""
+    try:
+        # Get attendee
+        attendee = Attendee.query.get(current_user_id)
+        if not attendee:
+            return jsonify({'error': 'Attendee not found'}), 404
+
+        # Get enrolled courses
+        attendee_units = [unit.strip() for unit in attendee.units.split(',')] if attendee.units else []
+
+        # Get all sessions for enrolled courses (both active and ended)
+        all_sessions = Session.query.filter(Session.course_code.in_(attendee_units)).all() if attendee_units else []
+
+        # Format schedule data
+        schedule = []
+        for session in all_sessions:
+            schedule.append({
+                'id': session.id,
+                'courseCode': session.course_code,
+                'title': session.title,
+                'attendantName': session.attendant_name,
+                'schedule': session.schedule,
+                'isActive': session.is_active,
+                'createdAt': session.created_at.isoformat() if session.created_at else None
+            })
+
+        return jsonify({
+            'enrolledCourses': attendee_units,
+            'sessions': schedule
+        }), 200
+
+    except Exception as e:
+        print(f"❌ Error fetching schedule: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Failed to fetch schedule'}), 500

@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.attendant_model import Attendant
+from app.models.attendee_model import Attendee
 from app.models.session_model import Session
 from app.models.attendance import Attendance
 from app.utils.auth import auth_required
@@ -91,7 +92,89 @@ def mark_attendance(current_user_id, session_id):
         
         db.session.commit()
         return jsonify({'message': 'Attendance marked successfully'}), 200
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to mark attendance'}), 500
+
+@attendant_bp.route('/students', methods=['GET'])
+@auth_required
+def get_all_students(current_user_id):
+    """Get all students/attendees"""
+    try:
+        attendees = Attendee.query.all()
+        return jsonify([{
+            'id': attendee.id,
+            'name': attendee.name,
+            'email': attendee.email,
+            'serial': attendee.serial,
+            'units': attendee.units.split(',') if attendee.units else []
+        } for attendee in attendees]), 200
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch students'}), 500
+
+@attendant_bp.route('/students/<int:student_id>/add-course', methods=['POST'])
+@auth_required
+def add_student_to_course(current_user_id, student_id):
+    """Add a student to a course"""
+    try:
+        data = request.get_json()
+        course_code = data.get('courseCode')
+
+        if not course_code:
+            return jsonify({'error': 'Course code required'}), 400
+
+        # Get the student
+        student = Attendee.query.get(student_id)
+        if not student:
+            return jsonify({'error': 'Student not found'}), 404
+
+        # Get current units
+        current_units = [unit.strip() for unit in student.units.split(',')] if student.units else []
+
+        # Check if already enrolled
+        if course_code in current_units:
+            return jsonify({'message': 'Student already enrolled in this course'}), 200
+
+        # Add the course
+        current_units.append(course_code)
+        student.units = ','.join(current_units)
+
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Student added to course successfully',
+            'student': {
+                'id': student.id,
+                'name': student.name,
+                'email': student.email,
+                'units': current_units
+            }
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to add student to course'}), 500
+
+@attendant_bp.route('/sessions/<int:session_id>/end', methods=['POST'])
+@auth_required
+def end_session(current_user_id, session_id):
+    """End a session (set is_active to False)"""
+    try:
+        # Verify session belongs to this attendant
+        session = Session.query.filter_by(id=session_id, attendant_id=current_user_id).first()
+        if not session:
+            return jsonify({'error': 'Session not found or access denied'}), 404
+
+        # End the session
+        session.is_active = False
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Session ended successfully',
+            'session': session.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to end session'}), 500

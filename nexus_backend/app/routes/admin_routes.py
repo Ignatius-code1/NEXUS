@@ -205,3 +205,89 @@ def get_analytics(current_user_id):
 
     except Exception as e:
         return jsonify({'error': 'Failed to fetch analytics'}), 500
+
+# Full Attendance Report
+@admin_bp.route('/reports/full', methods=['GET'])
+@admin_required
+def get_full_report(current_user_id):
+    """Get comprehensive attendance report"""
+    try:
+        from app.models.attendance import Attendance
+
+        # Get all sessions
+        all_sessions = Session.query.all()
+        total_sessions = len(all_sessions)
+        active_sessions_count = Session.query.filter_by(is_active=True).count()
+
+        # Get all attendance records
+        all_attendance = Attendance.query.all()
+        total_attendance_records = len(all_attendance)
+
+        # Calculate attendance by status
+        present_count = Attendance.query.filter_by(status='Present').count()
+
+        # Get all attendees
+        all_attendees = Attendee.query.all()
+        total_attendees = len(all_attendees)
+
+        # Calculate average attendance percentage
+        avg_attendance = (present_count / total_attendance_records * 100) if total_attendance_records > 0 else 0
+
+        # Get session details with attendance
+        sessions_report = []
+        for session in all_sessions:
+            session_attendance = Attendance.query.filter_by(session_id=session.id).all()
+            present_in_session = len([a for a in session_attendance if a.status == 'Present'])
+
+            sessions_report.append({
+                'id': session.id,
+                'title': session.title,
+                'courseCode': session.course_code,
+                'attendantName': session.attendant_name,
+                'schedule': session.schedule,
+                'isActive': session.is_active,
+                'totalAttendees': len(session_attendance),
+                'presentCount': present_in_session,
+                'attendanceRate': (present_in_session / len(session_attendance) * 100) if len(session_attendance) > 0 else 0,
+                'createdAt': session.created_at.isoformat() if session.created_at else None
+            })
+
+        # Get student attendance summary
+        students_report = []
+        for attendee in all_attendees:
+            attendee_records = Attendance.query.filter_by(attendee_id=attendee.id).all()
+            present_records = len([r for r in attendee_records if r.status == 'Present'])
+
+            students_report.append({
+                'id': attendee.id,
+                'name': attendee.name,
+                'email': attendee.email,
+                'serial': attendee.serial,
+                'enrolledCourses': attendee.units.split(',') if attendee.units else [],
+                'totalSessions': len(attendee_records),
+                'presentCount': present_records,
+                'attendanceRate': (present_records / len(attendee_records) * 100) if len(attendee_records) > 0 else 0
+            })
+
+        # Sort students by attendance rate (lowest first to identify at-risk students)
+        students_report.sort(key=lambda x: x['attendanceRate'])
+
+        return jsonify({
+            'summary': {
+                'totalSessions': total_sessions,
+                'activeSessions': active_sessions_count,
+                'totalAttendanceRecords': total_attendance_records,
+                'totalStudents': total_attendees,
+                'averageAttendance': round(avg_attendance, 2),
+                'presentCount': present_count
+            },
+            'sessions': sessions_report,
+            'students': students_report,
+            'generatedAt': datetime.now(timezone.utc).isoformat()
+        }), 200
+
+    except Exception as e:
+        print(f"❌ Error generating report: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Failed to generate report'}), 500
