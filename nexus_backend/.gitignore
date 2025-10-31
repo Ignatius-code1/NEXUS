@@ -1,0 +1,30 @@
+<<<<<<< HEAD
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment
+.env
+venv/
+env/
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+=======
+services/bluetoothservive.py
+services/device_service.py
+services/report_service.py
+>>>>>>> 00f41723bc8c435ea5303763c898af3a7fb50300
