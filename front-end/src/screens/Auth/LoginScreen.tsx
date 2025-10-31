@@ -7,8 +7,8 @@ import InputField from "../../components/InputField";
 import PrimaryButton from "../../components/PrimaryButton";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// API Base URL
-const API_BASE_URL = 'http://192.168.100.31:3000/api';
+// API Base URL - uses environment variable or falls back to current IP
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://172.30.39.233:3000/api';
 
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState("");

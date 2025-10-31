@@ -11,7 +11,8 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import FindSessionModal from "./FindSessionModal";
 
-const API_BASE_URL = "http://192.168.100.31:3000/api";
+// API Base URL - uses environment variable or falls back to current IP
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://172.30.39.233:3000/api";
 
 export default function AttendeeDashboard({ navigation }: any) {
   const [loading, setLoading] = useState(true);

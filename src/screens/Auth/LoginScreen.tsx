@@ -29,10 +29,9 @@ export default function LoginScreen() {
 
     setLoginLoading(true);
     try {
-      // Try API login first
       const response = await authApi.login(loginEmail, loginPassword);
       const { user } = response;
-      
+
       // Navigate based on role
       switch (user.role) {
         case "Admin":
@@ -48,34 +47,8 @@ export default function LoginScreen() {
           Alert.alert("Error", "Unknown user role");
       }
     } catch (error) {
-      // Fallback to mock login for testing
-      const mockUsers = [
-        { email: "admin@nexus.com", password: "admin123", role: "Admin" },
-        { email: "attendant@nexus.com", password: "attendant123", role: "Attendant" },
-        { email: "attendee@nexus.com", password: "attendee123", role: "Attendee" },
-      ];
-
-      const user = mockUsers.find(u => u.email === loginEmail && u.password === loginPassword);
-      
-      if (!user) {
-        Alert.alert("Error", "Invalid email or password");
-        return;
-      }
-
-      // Navigate based on role
-      switch (user.role) {
-        case "Admin":
-          (navigation as any).navigate("AdminDashboard");
-          break;
-        case "Attendant":
-          (navigation as any).navigate("AttendantDashboard");
-          break;
-        case "Attendee":
-          (navigation as any).navigate("AttendeeDashboard");
-          break;
-        default:
-          Alert.alert("Error", "Unknown user role");
-      }
+      Alert.alert("Error", "Invalid email or password. Please check your credentials.");
+      console.error("Login error:", error);
     } finally {
       setLoginLoading(false);
     }

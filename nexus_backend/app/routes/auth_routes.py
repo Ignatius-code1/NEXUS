@@ -60,6 +60,9 @@ def register_admin():
 
     except Exception as e:
         db.session.rollback()
+        print(f"Registration error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': 'Registration failed'}), 500
 
 @auth_bp.route('/login', methods=['POST'])
@@ -99,6 +102,9 @@ def login():
         return jsonify({'error': 'Invalid email or password'}), 401
         
     except Exception as e:
+        print(f"Login error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': 'Login failed'}), 500
 
 @auth_bp.route('/forgot-password', methods=['POST'])
