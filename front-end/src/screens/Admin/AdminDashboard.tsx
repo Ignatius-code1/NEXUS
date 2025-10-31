@@ -83,54 +83,15 @@ export default function AdminDashboard({ navigation }: any) {
   };
 
   const navigateToManageUsers = () => {
-    Alert.alert(
-      "Manage Users",
-      "View all attendants and attendees, edit their details, or remove users.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "View Users",
-          onPress: () => {
-            // TODO: Navigate to Manage Users screen
-            Alert.alert("Coming Soon", "This feature will be implemented next!");
-          },
-        },
-      ]
-    );
+    navigation.navigate("ManageUsers");
   };
 
   const navigateToViewReports = () => {
-    Alert.alert(
-      "View Reports",
-      "Generate attendance reports and analytics for all sessions.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "View Reports",
-          onPress: () => {
-            // TODO: Navigate to Reports screen
-            Alert.alert("Coming Soon", "This feature will be implemented next!");
-          },
-        },
-      ]
-    );
+    navigation.navigate("ViewReports");
   };
 
   const navigateToViewSessions = () => {
-    Alert.alert(
-      "View Sessions",
-      "See all active and past Bluetooth attendance sessions.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "View Sessions",
-          onPress: () => {
-            // TODO: Navigate to Sessions screen
-            Alert.alert("Coming Soon", "This feature will be implemented next!");
-          },
-        },
-      ]
-    );
+    navigation.navigate("ViewSessions");
   };
 
   if (loading) {

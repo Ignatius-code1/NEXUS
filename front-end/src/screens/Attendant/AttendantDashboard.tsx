@@ -177,7 +177,14 @@ export default function AttendantDashboard({ navigation }: any) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
 
-        <TouchableOpacity style={styles.actionCard}>
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => Alert.alert(
+            "Mark Attendance",
+            "Manual attendance marking feature. You can mark students present/absent here.",
+            [{ text: "OK" }]
+          )}
+        >
           <View style={styles.actionIcon}>
             <Text style={styles.actionEmoji}>✅</Text>
           </View>
@@ -190,7 +197,14 @@ export default function AttendantDashboard({ navigation }: any) {
           <Text style={styles.actionArrow}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionCard}>
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => Alert.alert(
+            "Attendance Reports",
+            "View detailed attendance reports and analytics for your classes.",
+            [{ text: "OK" }]
+          )}
+        >
           <View style={styles.actionIcon}>
             <Text style={styles.actionEmoji}>📊</Text>
           </View>

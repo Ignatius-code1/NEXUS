@@ -11,6 +11,13 @@ import CSVUploadScreen from '../screens/Admin/CSVUploadScreen';
 import AdminDashboard from '../screens/Admin/AdminDashboard';
 import AttendantDashboard from '../screens/Attendant/AttendantDashboard';
 import AttendeeDashboard from '../screens/Attendee/AttendeeDashboard';
+// Admin Screens
+import ManageUsersScreen from '../screens/Admin/ManageUsersScreen';
+import ViewReportsScreen from '../screens/Admin/ViewReportsScreen';
+import ViewSessionsScreen from '../screens/Admin/ViewSessionsScreen';
+// Attendee Screens
+import AttendanceHistoryScreen from '../screens/Attendee/AttendanceHistoryScreen';
+import ScheduleScreen from '../screens/Attendee/ScheduleScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +34,13 @@ export default function AppNavigator() {
       <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
       <Stack.Screen name="AttendantDashboard" component={AttendantDashboard} />
       <Stack.Screen name="AttendeeDashboard" component={AttendeeDashboard} />
+      {/* Admin Screens */}
+      <Stack.Screen name="ManageUsers" component={ManageUsersScreen} />
+      <Stack.Screen name="ViewReports" component={ViewReportsScreen} />
+      <Stack.Screen name="ViewSessions" component={ViewSessionsScreen} />
+      {/* Attendee Screens */}
+      <Stack.Screen name="AttendanceHistory" component={AttendanceHistoryScreen} />
+      <Stack.Screen name="Schedule" component={ScheduleScreen} />
     </Stack.Navigator>
   );
 }

@@ -224,7 +224,10 @@ export default function AttendeeDashboard({ navigation }: any) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
 
-        <TouchableOpacity style={styles.actionCard}>
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => navigation.navigate("AttendanceHistory")}
+        >
           <View style={styles.actionIcon}>
             <Text style={styles.actionEmoji}>📊</Text>
           </View>
@@ -237,7 +240,10 @@ export default function AttendeeDashboard({ navigation }: any) {
           <Text style={styles.actionArrow}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionCard}>
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => navigation.navigate("Schedule")}
+        >
           <View style={styles.actionIcon}>
             <Text style={styles.actionEmoji}>📅</Text>
           </View>
