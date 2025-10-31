@@ -11,10 +11,22 @@ attendant_bp = Blueprint('attendant', __name__)
 @attendant_bp.route('/sessions', methods=['GET'])
 @auth_required
 def get_my_sessions(current_user_id):
-    """Get sessions created by this attendant"""
+    """Get sessions created by this attendant with attendance counts"""
     try:
         sessions = Session.query.filter_by(attendant_id=current_user_id).all()
-        return jsonify([session.to_dict() for session in sessions]), 200
+        sessions_data = []
+
+        for session in sessions:
+            session_dict = session.to_dict()
+            # Get actual attendance count for this session
+            attendance_count = Attendance.query.filter_by(session_id=session.id).count()
+            present_count = Attendance.query.filter_by(session_id=session.id, status='Present').count()
+
+            session_dict['attendanceCount'] = attendance_count
+            session_dict['presentCount'] = present_count
+            sessions_data.append(session_dict)
+
+        return jsonify(sessions_data), 200
     except Exception as e:
         return jsonify({'error': 'Failed to fetch sessions'}), 500
 
@@ -178,3 +190,47 @@ def end_session(current_user_id, session_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to end session'}), 500
+
+@attendant_bp.route('/schedule', methods=['GET'])
+@auth_required
+def get_attendant_schedule(current_user_id):
+    """Get attendant's teaching schedule (all their sessions)"""
+    try:
+        # Get attendant
+        attendant = Attendant.query.get(current_user_id)
+        if not attendant:
+            return jsonify({'error': 'Attendant not found'}), 404
+
+        # Get courses they teach
+        attendant_courses = [unit.strip() for unit in attendant.units.split(',')] if attendant.units else []
+
+        # Get all sessions created by this attendant
+        all_sessions = Session.query.filter_by(attendant_id=current_user_id).all()
+
+        # Format schedule data
+        schedule = []
+        for session in all_sessions:
+            attendance_count = Attendance.query.filter_by(session_id=session.id).count()
+            present_count = Attendance.query.filter_by(session_id=session.id, status='Present').count()
+
+            schedule.append({
+                'id': session.id,
+                'courseCode': session.course_code,
+                'title': session.title,
+                'schedule': session.schedule,
+                'isActive': session.is_active,
+                'attendanceCount': attendance_count,
+                'presentCount': present_count,
+                'createdAt': session.created_at.isoformat() if session.created_at else None
+            })
+
+        return jsonify({
+            'teachingCourses': attendant_courses,
+            'sessions': schedule
+        }), 200
+
+    except Exception as e:
+        print(f"❌ Error fetching attendant schedule: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Failed to fetch schedule'}), 500

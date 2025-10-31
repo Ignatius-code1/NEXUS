@@ -224,9 +224,14 @@ export default function AttendantDashboard({ navigation }: any) {
               <Text style={styles.sessionInfo}>
                 Schedule: {session.schedule}
               </Text>
-              <Text style={styles.sessionInfo}>
-                Members: {session.members?.length || 0}
-              </Text>
+              <View style={styles.attendanceInfo}>
+                <Text style={styles.sessionInfo}>
+                  👥 Total Joined: {session.attendanceCount || 0}
+                </Text>
+                <Text style={[styles.sessionInfo, { color: "#34C759", fontWeight: "600" }]}>
+                  ✅ Present: {session.presentCount || 0}
+                </Text>
+              </View>
               {session.isActive && (
                 <TouchableOpacity
                   style={styles.endSessionButton}
@@ -246,19 +251,15 @@ export default function AttendantDashboard({ navigation }: any) {
 
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => Alert.alert(
-            "Mark Attendance",
-            "Manual attendance marking feature. You can mark students present/absent here.",
-            [{ text: "OK" }]
-          )}
+          onPress={() => navigation.navigate("AttendantSchedule")}
         >
           <View style={styles.actionIcon}>
-            <Text style={styles.actionEmoji}>✅</Text>
+            <Text style={styles.actionEmoji}>📅</Text>
           </View>
           <View style={styles.actionContent}>
-            <Text style={styles.actionTitle}>Mark Attendance</Text>
+            <Text style={styles.actionTitle}>My Schedule</Text>
             <Text style={styles.actionSubtitle}>
-              Manually mark attendance
+              View my teaching schedule
             </Text>
           </View>
           <Text style={styles.actionArrow}>›</Text>
@@ -266,19 +267,31 @@ export default function AttendantDashboard({ navigation }: any) {
 
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => Alert.alert(
-            "Attendance Reports",
-            "View detailed attendance reports and analytics for your classes.",
-            [{ text: "OK" }]
-          )}
+          onPress={() => navigation.navigate("ViewSessions")}
         >
           <View style={styles.actionIcon}>
             <Text style={styles.actionEmoji}>📊</Text>
           </View>
           <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>View All Sessions</Text>
+            <Text style={styles.actionSubtitle}>
+              See all sessions and attendance
+            </Text>
+          </View>
+          <Text style={styles.actionArrow}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => navigation.navigate("ViewReports")}
+        >
+          <View style={styles.actionIcon}>
+            <Text style={styles.actionEmoji}>📈</Text>
+          </View>
+          <View style={styles.actionContent}>
             <Text style={styles.actionTitle}>View Reports</Text>
             <Text style={styles.actionSubtitle}>
-              Attendance reports for my classes
+              Attendance analytics and reports
             </Text>
           </View>
           <Text style={styles.actionArrow}>›</Text>
@@ -471,6 +484,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6E6E73",
     marginTop: 4,
+  },
+  attendanceInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#F5F5F7",
   },
   actionCard: {
     flexDirection: "row",

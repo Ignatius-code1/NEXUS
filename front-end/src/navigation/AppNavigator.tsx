@@ -15,6 +15,8 @@ import AttendeeDashboard from '../screens/Attendee/AttendeeDashboard';
 import ManageUsersScreen from '../screens/Admin/ManageUsersScreen';
 import ViewReportsScreen from '../screens/Admin/ViewReportsScreen';
 import ViewSessionsScreen from '../screens/Admin/ViewSessionsScreen';
+// Attendant Screens
+import AttendantScheduleScreen from '../screens/Attendant/AttendantScheduleScreen';
 // Attendee Screens
 import AttendanceHistoryScreen from '../screens/Attendee/AttendanceHistoryScreen';
 import ScheduleScreen from '../screens/Attendee/ScheduleScreen';
@@ -38,6 +40,8 @@ export default function AppNavigator() {
       <Stack.Screen name="ManageUsers" component={ManageUsersScreen} />
       <Stack.Screen name="ViewReports" component={ViewReportsScreen} />
       <Stack.Screen name="ViewSessions" component={ViewSessionsScreen} />
+      {/* Attendant Screens */}
+      <Stack.Screen name="AttendantSchedule" component={AttendantScheduleScreen} />
       {/* Attendee Screens */}
       <Stack.Screen name="AttendanceHistory" component={AttendanceHistoryScreen} />
       <Stack.Screen name="Schedule" component={ScheduleScreen} />
